@@ -47,6 +47,144 @@ static void matrix_identity(float* out) {
   }
 }
 
+static void _math_matrix_scale(GLfloat *m, GLfloat x, GLfloat y, GLfloat z ) {
+   m[0] *= x;   m[4] *= y;   m[8]  *= z;
+   m[1] *= x;   m[5] *= y;   m[9]  *= z;
+   m[2] *= x;   m[6] *= y;   m[10] *= z;
+   m[3] *= x;   m[7] *= y;   m[11] *= z;
+}
+
+
+bool invert(float invOut[16], const float m[16])
+{
+    float inv[16], det;
+    int i;
+
+    inv[0] = m[5]  * m[10] * m[15] - 
+             m[5]  * m[11] * m[14] - 
+             m[9]  * m[6]  * m[15] + 
+             m[9]  * m[7]  * m[14] +
+             m[13] * m[6]  * m[11] - 
+             m[13] * m[7]  * m[10];
+
+    inv[4] = -m[4]  * m[10] * m[15] + 
+              m[4]  * m[11] * m[14] + 
+              m[8]  * m[6]  * m[15] - 
+              m[8]  * m[7]  * m[14] - 
+              m[12] * m[6]  * m[11] + 
+              m[12] * m[7]  * m[10];
+
+    inv[8] = m[4]  * m[9] * m[15] - 
+             m[4]  * m[11] * m[13] - 
+             m[8]  * m[5] * m[15] + 
+             m[8]  * m[7] * m[13] + 
+             m[12] * m[5] * m[11] - 
+             m[12] * m[7] * m[9];
+
+    inv[12] = -m[4]  * m[9] * m[14] + 
+               m[4]  * m[10] * m[13] +
+               m[8]  * m[5] * m[14] - 
+               m[8]  * m[6] * m[13] - 
+               m[12] * m[5] * m[10] + 
+               m[12] * m[6] * m[9];
+
+    inv[1] = -m[1]  * m[10] * m[15] + 
+              m[1]  * m[11] * m[14] + 
+              m[9]  * m[2] * m[15] - 
+              m[9]  * m[3] * m[14] - 
+              m[13] * m[2] * m[11] + 
+              m[13] * m[3] * m[10];
+
+    inv[5] = m[0]  * m[10] * m[15] - 
+             m[0]  * m[11] * m[14] - 
+             m[8]  * m[2] * m[15] + 
+             m[8]  * m[3] * m[14] + 
+             m[12] * m[2] * m[11] - 
+             m[12] * m[3] * m[10];
+
+    inv[9] = -m[0]  * m[9] * m[15] + 
+              m[0]  * m[11] * m[13] + 
+              m[8]  * m[1] * m[15] - 
+              m[8]  * m[3] * m[13] - 
+              m[12] * m[1] * m[11] + 
+              m[12] * m[3] * m[9];
+
+    inv[13] = m[0]  * m[9] * m[14] - 
+              m[0]  * m[10] * m[13] - 
+              m[8]  * m[1] * m[14] + 
+              m[8]  * m[2] * m[13] + 
+              m[12] * m[1] * m[10] - 
+              m[12] * m[2] * m[9];
+
+    inv[2] = m[1]  * m[6] * m[15] - 
+             m[1]  * m[7] * m[14] - 
+             m[5]  * m[2] * m[15] + 
+             m[5]  * m[3] * m[14] + 
+             m[13] * m[2] * m[7] - 
+             m[13] * m[3] * m[6];
+
+    inv[6] = -m[0]  * m[6] * m[15] + 
+              m[0]  * m[7] * m[14] + 
+              m[4]  * m[2] * m[15] - 
+              m[4]  * m[3] * m[14] - 
+              m[12] * m[2] * m[7] + 
+              m[12] * m[3] * m[6];
+
+    inv[10] = m[0]  * m[5] * m[15] - 
+              m[0]  * m[7] * m[13] - 
+              m[4]  * m[1] * m[15] + 
+              m[4]  * m[3] * m[13] + 
+              m[12] * m[1] * m[7] - 
+              m[12] * m[3] * m[5];
+
+    inv[14] = -m[0]  * m[5] * m[14] + 
+               m[0]  * m[6] * m[13] + 
+               m[4]  * m[1] * m[14] - 
+               m[4]  * m[2] * m[13] - 
+               m[12] * m[1] * m[6] + 
+               m[12] * m[2] * m[5];
+
+    inv[3] = -m[1] * m[6] * m[11] + 
+              m[1] * m[7] * m[10] + 
+              m[5] * m[2] * m[11] - 
+              m[5] * m[3] * m[10] - 
+              m[9] * m[2] * m[7] + 
+              m[9] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] - 
+             m[0] * m[7] * m[10] - 
+             m[4] * m[2] * m[11] + 
+             m[4] * m[3] * m[10] + 
+             m[8] * m[2] * m[7] - 
+             m[8] * m[3] * m[6];
+
+    inv[11] = -m[0] * m[5] * m[11] + 
+               m[0] * m[7] * m[9] + 
+               m[4] * m[1] * m[11] - 
+               m[4] * m[3] * m[9] - 
+               m[8] * m[1] * m[7] + 
+               m[8] * m[3] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] - 
+              m[0] * m[6] * m[9] - 
+              m[4] * m[1] * m[10] + 
+              m[4] * m[2] * m[9] + 
+              m[8] * m[1] * m[6] - 
+              m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+    if (det == 0)
+        return false;
+
+    det = 1.0 / det;
+
+    for (i = 0; i < 16; i++)
+        invOut[i] = inv[i] * det;
+
+    return true;
+}
+
 #define A(row,col)  a[(col<<2)+row]
 #define B(row,col)  b[(col<<2)+row]
 #define P(row,col) product[(col<<2)+row]
@@ -65,11 +203,40 @@ static void matmul4( GLfloat *product, const GLfloat *a, const GLfloat *b )
 #undef B
 #undef P
 
+void ortho(float* r, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearval, GLdouble farval) {
+  //FIXME: Multiply this onto the existing stack - don't overwrite
+
+   GLfloat m[16];
+
+#define M(row,col)  m[col*4+row]
+   M(0,0) = 2.0F / (right-left);
+   M(0,1) = 0.0F;
+   M(0,2) = 0.0F;
+   M(0,3) = -(right+left) / (right-left);
+
+   M(1,0) = 0.0F;
+   M(1,1) = 2.0F / (top-bottom);
+   M(1,2) = 0.0F;
+   M(1,3) = -(top+bottom) / (top-bottom);
+
+   M(2,0) = 0.0F;
+   M(2,1) = 0.0F;
+   M(2,2) = -2.0F / (farval-nearval);
+   M(2,3) = -(farval+nearval) / (farval-nearval);
+
+   M(3,0) = 0.0F;
+   M(3,1) = 0.0F;
+   M(3,2) = 0.0F;
+   M(3,3) = 1.0F;
+#undef M
+
+  memcpy(r, m, sizeof(m));
+}
 
 static void update_matrices() {
   uint32_t *p;
 
-  matrix_identity(projectionMatrix);
+  //matrix_identity(projectionMatrix);
   matrix_identity(modelViewMatrix);
 
   p = pb_begin();
@@ -91,10 +258,25 @@ static void update_matrices() {
   }
   pb_end(p);
 
+
+  float tmp[4*4];
+
+  // Undo the viewport transform
+  //FIXME: Use actual viewport settings
+  float undoViewport[4*4];
+  ortho(tmp, 0.0f, 640.0f, 0.0f, 480.0f, 0.0f, 0xFFFFFF);
+  invert(undoViewport, tmp);
+
+
+
   // Generate a composite matrix
   float compositeMatrix[4*4];
-  //matmul4(compositeMatrix, modelViewMatrix, projectionMatrix);
-  memcpy(compositeMatrix, projectionMatrix, sizeof(compositeMatrix));
+  matmul4(compositeMatrix, modelViewMatrix, projectionMatrix);
+
+
+  memcpy(tmp, compositeMatrix, sizeof(tmp));
+  matmul4(compositeMatrix, tmp, undoViewport);
+
   p = pb_begin();
   pb_push(p++, NV097_SET_COMPOSITE_MATRIX, 4 * 4);
   for(int i = 0; i < 4; i++) {
@@ -187,51 +369,55 @@ void glLoadIdentity(void) {
 }
 
 
+
 void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearval, GLdouble farval) {
   //FIXME: Multiply this onto the existing stack - don't overwrite
 
-   GLfloat m[16];
-
-#define M(row,col)  m[col*4+row]
-   M(0,0) = 2.0F / (right-left);
-   M(0,1) = 0.0F;
-   M(0,2) = 0.0F;
-   M(0,3) = -(right+left) / (right-left);
-
-   M(1,0) = 0.0F;
-   M(1,1) = 2.0F / (top-bottom);
-   M(1,2) = 0.0F;
-   M(1,3) = -(top+bottom) / (top-bottom);
-
-   M(2,0) = 0.0F;
-   M(2,1) = 0.0F;
-   M(2,2) = -2.0F / (farval-nearval);
-   M(2,3) = -(farval+nearval) / (farval-nearval);
-
-   M(3,0) = 0.0F;
-   M(3,1) = 0.0F;
-   M(3,2) = 0.0F;
-   M(3,3) = 1.0F;
-#undef M
+  GLfloat m[16];
+  ortho(m, left, right, bottom, top, nearval, farval);
 
   float t[4 * 4];
-  matmul4( t, m, targetMatrix);
+  matmul4( t, targetMatrix, m);
   memcpy(targetMatrix, t, sizeof(t));
 
-  memcpy(targetMatrix, m, sizeof(m));
+//  memcpy(targetMatrix, m, sizeof(m));
 }
+
 
 //FIXME:   glScalef(1, -1, 1);           /* Invert Y axis so increasing Y goes down. */
 void glScalef(GLfloat x, GLfloat y, GLfloat z) {
+  float m[4*4];
+  matrix_identity(m);
+  _math_matrix_scale(m, x, y, z);
+
+  float t[4 * 4];
+  matmul4( t, targetMatrix, m);
+  memcpy(targetMatrix, t, sizeof(t));
+}
+
+static void _math_matrix_translate(GLfloat *m, GLfloat x, GLfloat y, GLfloat z ) {
+   m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
+   m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
+   m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
+   m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
 }
 
 //FIXME:   glTranslatef(0, -h, 0);       /* Shift origin up to upper-left corner. */
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z) {
+  float m[4*4];
+  matrix_identity(m);
+  _math_matrix_translate(m, x, y, z);
+
+  float t[4 * 4];
+  matmul4( t, targetMatrix, m);
+  memcpy(targetMatrix, t, sizeof(t));
 }
 
+#if 0
 //FIXME:   glRotatef(60, 1.0, 0.0, 0.0); (used to rotate cube)
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
 }
+#endif
 
 #define GL_LIGHT0 0
 #define GL_DIFFUSE 0
@@ -282,7 +468,7 @@ static void vertex_attribute_3f(int index, float x, float y, float z) {
   vertex_attribute_4f(index, x, y, z, 1.0f);
 }
 
-static void vertex_attribute_2i(int index, int16_t x, int16_t y) {
+static void vertex_attribute_2s(int index, int16_t x, int16_t y) {
   int reg = NV097_SET_VERTEX_DATA2S + index * 4;
 
   uint32_t *p = pb_begin();
@@ -312,8 +498,9 @@ void glVertex3fv(const GLfloat * v) {
   glVertex3f(v[0], v[1], v[2]);
 }
 
-void glVertex2i(GLint x, GLint y) {
-  vertex_attribute_2i(0, x, y);
+//FIXME: This is wrong! Xbox 2s seems to normalize values (XQEMU does it at least), so this gets all messed up
+void glVertex2s(GLint x, GLint y) {
+  vertex_attribute_2s(0, x, y);
 }
 
 void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) {

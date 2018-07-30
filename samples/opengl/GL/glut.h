@@ -58,6 +58,10 @@ void glutInit(int* argc, char* argv[]) {
   pb_end(p);
 }
 
+void glutInitWindowSize(int width, int height) {
+  //FIXME: Possibly use this to pick default viewport or even display mode?
+}
+
 #define GLUT_DOUBLE 0x1
 #define GLUT_RGB 0x2
 #define GLUT_DEPTH 0x4
