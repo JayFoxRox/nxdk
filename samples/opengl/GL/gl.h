@@ -17,6 +17,7 @@ typedef int bool;
 
 #define MASK(mask, val) (((val) << (ffs(mask)-1)) & (mask))
 
+typedef unsigned char GLubyte;
 typedef int GLenum;
 typedef int GLint;
 typedef float GLfloat;
@@ -27,6 +28,7 @@ typedef unsigned int GLbitfield;
 #define GL_PROJECTION 0
 #define GL_MODELVIEW 1
 #define GL_TRIANGLES NV097_SET_BEGIN_END_OP_TRIANGLES
+#define GL_TRIANGLE_FAN NV097_SET_BEGIN_END_OP_TRIANGLE_FAN
 #define GL_QUADS NV097_SET_BEGIN_END_OP_QUADS
 
 #define GL_COLOR_BUFFER_BIT 0x1
@@ -67,30 +69,34 @@ static void matmul4( GLfloat *product, const GLfloat *a, const GLfloat *b )
 static void update_matrices() {
   uint32_t *p;
 
+  matrix_identity(projectionMatrix);
+  matrix_identity(modelViewMatrix);
+
   p = pb_begin();
-  pb_push(p++, NV097_SET_PROJECTION_MATRIX, 4 * 4); //bit 30 means all params go to same register 0x1810
+  pb_push(p++, NV097_SET_PROJECTION_MATRIX, 4 * 4);
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j < 4; j++) {
-      *(p++) = *(uint32_t*)&projectionMatrix[i*4+j];
+      *(p++) = 0.0f; //*(uint32_t*)&projectionMatrix[i*4+j];
     }
   }
   pb_end(p);
 
   //FIXME: Use the real modelview
   p = pb_begin();
-  pb_push(p++, NV097_SET_MODEL_VIEW_MATRIX, 4 * 4); //bit 30 means all params go to same register 0x1810
+  pb_push(p++, NV097_SET_MODEL_VIEW_MATRIX, 4 * 4);
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j < 4; j++) {
-      *(p++) = *(uint32_t*)&modelViewMatrix[i*4+j];
+      *(p++) = 0.0f; //*(uint32_t*)&modelViewMatrix[i*4+j];
     }
   }
   pb_end(p);
 
   // Generate a composite matrix
   float compositeMatrix[4*4];
-  matmul4(compositeMatrix, modelViewMatrix, projectionMatrix);
+  //matmul4(compositeMatrix, modelViewMatrix, projectionMatrix);
+  memcpy(compositeMatrix, projectionMatrix, sizeof(compositeMatrix));
   p = pb_begin();
-  pb_push(p++, NV097_SET_COMPOSITE_MATRIX, 4 * 4); //bit 30 means all params go to same register 0x1810
+  pb_push(p++, NV097_SET_COMPOSITE_MATRIX, 4 * 4);
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j < 4; j++) {
       *(p++) = *(uint32_t*)&compositeMatrix[i*4+j];
@@ -184,7 +190,6 @@ void glLoadIdentity(void) {
 void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearval, GLdouble farval) {
   //FIXME: Multiply this onto the existing stack - don't overwrite
 
-
    GLfloat m[16];
 
 #define M(row,col)  m[col*4+row]
@@ -212,6 +217,8 @@ void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdou
   float t[4 * 4];
   matmul4( t, m, targetMatrix);
   memcpy(targetMatrix, t, sizeof(t));
+
+  memcpy(targetMatrix, m, sizeof(m));
 }
 
 //FIXME:   glScalef(1, -1, 1);           /* Invert Y axis so increasing Y goes down. */
@@ -263,7 +270,7 @@ static void vertex_attribute_4f(int index, float x, float y, float z, float w) {
   int reg = NV097_SET_VERTEX_DATA4F_M + (index * 4) * 4;
 
   uint32_t *p = pb_begin();
-  pb_push(p++, reg, 4); //bit 30 means all params go to same register 0x1810
+  pb_push(p++, reg, 4);
   *(p++) = *(uint32_t*)&x;
   *(p++) = *(uint32_t*)&y;
   *(p++) = *(uint32_t*)&z;
@@ -284,10 +291,18 @@ static void vertex_attribute_2i(int index, int16_t x, int16_t y) {
   pb_end(p);
 }
 
+static void vertex_attribute_4ub(int index, uint8_t x, uint8_t y, uint8_t z, uint8_t w) {
+  int reg = NV097_SET_VERTEX_DATA4UB + index * 4;
+
+  uint32_t *p = pb_begin();
+  pb_push(p++, reg, 1);
+  *(p++) = x | (y << 8) | (z << 16) | (w << 24);
+  pb_end(p);
+}
+
 void glColor3f(GLfloat red, GLfloat green, GLfloat blue) {
   vertex_attribute_3f(3, red, green, blue);
 }
-
 
 void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
   vertex_attribute_3f(0, x, y, z);
@@ -300,6 +315,16 @@ void glVertex3fv(const GLfloat * v) {
 void glVertex2i(GLint x, GLint y) {
   vertex_attribute_2i(0, x, y);
 }
+
+void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) {
+  vertex_attribute_4ub(3, red, green, blue, alpha);
+}
+
+#if 0
+void glColor3ub(GLubyte red, GLubyte green, GLubyte blue) {
+
+}
+#endif
 
 void glNormal3f(GLfloat x, GLfloat y, GLfloat z) {
   vertex_attribute_3f(2, x, y, z);
