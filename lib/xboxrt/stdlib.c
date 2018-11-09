@@ -3,7 +3,8 @@
 #include "ctype.h"
 #include <xboxkrnl/xboxkrnl.h>
 
-static const char digits[] = "0123456789abcdef";
+static const char digits_lower[] = "0123456789abcdef";
+static const char digits_upper[] = "0123456789ABCDEF";
 
 static unsigned int find_divisor(unsigned long val, unsigned int base)
 {
@@ -17,15 +18,18 @@ static unsigned int find_divisor(unsigned long val, unsigned int base)
 static unsigned int write_uint(char *dst,
                                unsigned int len,
                                unsigned long val,
-                               unsigned int base)
+                               unsigned int base,
+                               bool upper)
 {
   unsigned int div;
   unsigned int n;
 
+  const char* digits = upper ? digits_upper : digits_lower;
+
   if (base < 2)
     base = 2;
-  else if (base > sizeof(digits) - 1)
-    base = sizeof(digits) - 1;
+  else if (base > strlen(digits))
+    base = strlen(digits);
 
   div = find_divisor(val, base); // div < base unless val <= 1
   n = 0;
@@ -49,10 +53,10 @@ static unsigned int write_int(char *dst,
 
   if (val < 0) {
     *dst = '-';
-    return 1 + write_uint(dst + 1, len - 1, -val, base);
+    return 1 + write_uint(dst + 1, len - 1, -val, base, false);
   }
 
-  return write_uint(dst, len, val, base);
+  return write_uint(dst, len, val, base, false);
 }
 
 static unsigned int write_string(char *dst, unsigned int len, const char *src)
@@ -97,22 +101,44 @@ int vsnprintf(char *buf, unsigned int len, const char *fmt, va_list ap)
 
     c = fmt[++i];
 
-    if (c == 's')
-      n += write_string(buf + n, len - n, va_arg(ap, const char *));
-    else if (c == 'd')
-      n += write_int(buf + n, len - n, va_arg(ap, long), 10);
-    else if (c == 'o')
-      n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 8);
-    else if (c == 'u')
-      n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 10);
-    else if (c == 'p' || c == 'x')
-      n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 16);
-    else if (c == 'c')
-      buf[n++] = va_arg(ap, int);
-    else if (c == '%')
-      buf[n++] = '%';
-    else
-      buf[n++] = c;
+    if ((c == '0') && (fmt[i+2] == 'X')) {
+
+      int pad = fmt[i+1] - '0';
+      i+=2;
+      char tmp[10];
+      int tmp_n = write_uint(tmp, pad, va_arg(ap, unsigned long), 16, true);
+      tmp[tmp_n] = '\0';
+
+      for(int j = 0; j < (pad - tmp_n); j++) {
+        buf[n++] = '0';
+      }
+      n += write_string(buf + n, len - n, tmp);
+
+    } else if ((c == '7') && (fmt[i+1] == 'u')) {
+      i+=1;
+      unsigned long v = va_arg(ap, unsigned long);
+      n += write_uint(buf + n, len - n, v, 10, false);
+    } else {
+      if (c == 's') {
+        const char* v = va_arg(ap, const char *);
+        n += write_string(buf + n, len - n, v);
+      } else if (c == 'd')
+        n += write_int(buf + n, len - n, va_arg(ap, long), 10);
+      else if (c == 'l' || c == 'L') 
+        n += write_int(buf + n, len - n, va_arg(ap, unsigned long long), 10);
+      else if (c == 'o')
+        n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 8, false);
+      else if (c == 'u')
+        n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 10, false);
+      else if (c == 'p' || c == 'x' || c == 'X')
+        n += write_uint(buf + n, len - n, va_arg(ap, unsigned long), 16, (c == 'X'));
+      else if (c == 'c')
+        buf[n++] = va_arg(ap, int);
+      else if (c == '%')
+        buf[n++] = '%';
+      else
+        buf[n++] = c;
+    }
   }
 
   if (n >= len)
@@ -157,7 +183,9 @@ static int VirtualFree(void *lpAddress, unsigned int dwSize, unsigned int dwFree
 }
 
 void * malloc(size_t size) {
-    return VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* x = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    assert(x != NULL);
+    return x;
 }
 
 void free(void *ptr) {
