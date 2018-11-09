@@ -93,6 +93,12 @@ int XConvertDOSFilenameToXBOX(char *dosFilename, char *xboxFilename)
 	// directory without the leading slash.  eg. "foo\bar.txt"
 	char *path;
 
+  // Hack to also accept Xbox names directly
+  if (!memcmp(dosFilename, "\\Device\\", 8)) {
+    strcpy(xboxFilename, dosFilename);
+  	return STATUS_SUCCESS;
+  }
+
 	// partition points to a literal string representing
 	// the fully qualified device name
 	char *partition = NULL;

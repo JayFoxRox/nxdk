@@ -4,7 +4,7 @@
 extern void main(void);
 
 void XboxCRT(void) {
-    XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+    //XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
     main();
 
