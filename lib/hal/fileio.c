@@ -308,6 +308,7 @@ int XReadFile(
         return TRUE;
     }
 
+    printf("STATUS: 0x%X\n", status);
     return FALSE;
 }
 

@@ -21,8 +21,9 @@ static int fread(void* buffer, int chunk_count, int chunk_size, FILE* f) {
   unsigned int numberOfBytesRead;
   int r = XReadFile(f->handle, buffer, chunk_count * chunk_size, &numberOfBytesRead);
   if (r != TRUE) {
+    // Assume 0xC0000011, thanks obama!
     debugPrint("Read failed\n");
-    while(1);
+    return 0;
   }
   if (numberOfBytesRead != chunk_count * chunk_size) {
     debugPrint("Read too few bytes\n");
@@ -148,7 +149,6 @@ static int vprintf(const char *format, va_list ap) { //FIXME: Should be in stdar
 }
 
 static int printf(const char *format, ...) {
-  char buf[4096];
   va_list args;
   va_start (args, format);
   int r = vprintf(format, args);
