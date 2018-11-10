@@ -23,10 +23,19 @@ static int fwrite(const void* buffer, int chunk_count, int chunk_size, FILE* f) 
   return numberOfBytesWritten / chunk_size;
 }
 
+static long ftell(FILE *stream) {
+  int newFilePointer;
+  int r = XSetFilePointer(stream->handle, 0, &newFilePointer,	FILE_CURRENT);
+  return newFilePointer;
+}
+
 static int fseek(FILE* f, int offset, int whence) {
   int moveMethod;
   switch(whence) {
   case SEEK_SET:
+    break;
+  case SEEK_CUR:
+    offset += ftell(f);
     break;
   case SEEK_END: {
     // We can't use FILE_END from XSetFilePointer due to bugs; do our own thing
@@ -132,13 +141,6 @@ static int fread(void* buffer, int chunk_size, int chunk_count, FILE* f) {
     //while(1);
   }
   return numberOfBytesRead / chunk_size;
-}
-
-
-static long ftell(FILE *stream) {
-  int newFilePointer;
-  int r = XSetFilePointer(stream->handle, 0, &newFilePointer,	FILE_CURRENT);
-  return newFilePointer;
 }
 
 static int fprintf(FILE *stream, const char *format, ...) {
