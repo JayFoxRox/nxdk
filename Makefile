@@ -113,7 +113,7 @@ endif
 
 $(SRCS): $(SHADER_OBJS)
 
-main.exe: $(OBJS) $(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
+main.exe: $(OBJS) $(NXDK_DIR)/lib/xboxkrnl.lib $(NXDK_DIR)/lib/crt0.lib
 	@echo "[ LD       ] $@"
 	$(VE) $(LD) $(LDFLAGS) -subsystem:windows -dll -out:'$@' -entry:XboxCRTEntry -stack:$(NXDK_STACKSIZE) $^
 
@@ -180,3 +180,19 @@ distclean: clean
 	$(VE)bash -c "if [ -d $(OUTPUT_DIR) ]; then rmdir $(OUTPUT_DIR); fi"
 
 -include $(DEPS)
+
+# llvm-lib currently doesn't support def files, so we need a workaround
+# Maybe: @cp $(NXDK_DIR)/lib/xboxkrnl/xboxkrnl.lib $@
+# Wanted: llvm-lib -def:$(NXDK_DIR)/lib/xboxkrnl/xboxkrnl.exe.def -out:$@ -machine:x86
+$(NXDK_DIR)/lib/xboxkrnl.lib:
+	@llvm-dlltool -d lib/xboxkrnl/xboxkrnl.exe.def -m i386 -l $@ #FIXME: Test?
+
+$(NXDK_DIR)/lib/crt0.lib: $(NXDK_DIR)/lib/pdclib/platform/xbox/crt0.obj \
+                          $(NXDK_DIR)/lib/pdclib/platform/xbox/crt_initializers.obj \
+                          $(NXDK_DIR)/lib/pdclib/platform/xbox/_tls_array.obj \
+                          $(NXDK_DIR)/lib/pdclib/platform/xbox/tls.obj
+	@llvm-lib -out:$@ $^ $(LDFLAGS)
+
+$(NXDK_DIR)/lib/pbkit.lib: $(NXDK_DIR)/lib/pbkit/pbkit.obj
+	@llvm-lib -out:$@ $^
+

@@ -22,11 +22,14 @@ USB_SRCS := \
 SRCS += \
 	$(wildcard $(NXDK_DIR)/lib/xboxrt/*.c) \
 	$(shell find $(NXDK_DIR)/lib/pdclib/functions/ -name "*.c") \
-	$(shell find $(NXDK_DIR)/lib/pdclib/platform/xbox/ -name "*.c") \
-	$(shell find $(NXDK_DIR)/lib/pdclib/platform/xbox/ -name "*.s") \
+	$(shell find $(NXDK_DIR)/lib/pdclib/platform/xbox/functions -name "*.c") \
+	$(shell find $(NXDK_DIR)/lib/pdclib/platform/xbox/functions -name "*.s") \
 	$(wildcard $(NXDK_DIR)/lib/xlibc-rt/*.c) \
 	$(wildcard $(NXDK_DIR)/lib/xlibc-rt/*.s) \
 	$(wildcard $(NXDK_DIR)/lib/hal/*.c) \
 	$(wildcard $(NXDK_DIR)/lib/winapi/*.c) \
-	$(wildcard $(NXDK_DIR)/lib/pbkit/*.c) \
 	$(USB_SRCS)
+
+
+
+
