@@ -67,7 +67,7 @@ NXDK_CFLAGS += $(CFLAGS)
 NXDK_CXXFLAGS += $(CXXFLAGS)
 
 include $(NXDK_DIR)/lib/Makefile
-OBJS = $(addsuffix .obj, $(basename $(SRCS)))
+OBJS += $(addsuffix .obj, $(basename $(SRCS)))
 
 ifneq ($(GEN_XISO),)
 TARGET += $(GEN_XISO)
