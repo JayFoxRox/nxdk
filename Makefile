@@ -192,3 +192,10 @@ distclean: clean
 	$(VE)bash -c "if [ -d $(OUTPUT_DIR) ]; then rmdir $(OUTPUT_DIR); fi"
 
 -include $(DEPS)
+
+# llvm-lib currently doesn't support def files, so we need a workaround
+# Maybe: @cp $(NXDK_DIR)/lib/xboxkrnl/xboxkrnl.lib $@
+# Wanted: llvm-lib -def:$(NXDK_DIR)/lib/xboxkrnl/xboxkrnl.exe.def -out:$@ -machine:x86
+$(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib: $(NXDK_DIR)/lib/xboxkrnl/xboxkrnl.exe.def
+	@llvm-dlltool -d '$<' -m i386 -l '$@' -k -f=-s #FIXME: Test?
+
