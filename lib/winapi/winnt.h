@@ -3,6 +3,8 @@
 
 #include <xboxkrnl/xboxnt.h>
 
+typedef LONG HRESULT;
+
 typedef CHAR *LPSTR;
 
 #ifdef UNICODE
