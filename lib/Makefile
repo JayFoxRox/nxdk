@@ -1,4 +1,4 @@
-USB_SRCS := \
+NXDK_USB_SRCS := \
 	$(NXDK_DIR)/lib/usb/host/ohci-hcd.c \
 	$(NXDK_DIR)/lib/usb/core/message.c \
 	$(NXDK_DIR)/lib/usb/core/hcd.c \
@@ -19,7 +19,7 @@ USB_SRCS := \
 	$(NXDK_DIR)/lib/usb/misc/pci.c \
 	$(NXDK_DIR)/lib/usb/misc/malloc.c
 
-SRCS += \
+NXDK_SRCS += \
 	$(wildcard $(NXDK_DIR)/lib/xboxrt/*.c) \
 	$(shell find $(NXDK_DIR)/lib/pdclib/functions/ -name "*.c") \
 	$(shell find $(NXDK_DIR)/lib/pdclib/platform/xbox/ -name "*.c") \
@@ -29,4 +29,4 @@ SRCS += \
 	$(wildcard $(NXDK_DIR)/lib/hal/*.c) \
 	$(wildcard $(NXDK_DIR)/lib/winapi/*.c) \
 	$(wildcard $(NXDK_DIR)/lib/pbkit/*.c) \
-	$(USB_SRCS)
+	$(NXDK_USB_SRCS)

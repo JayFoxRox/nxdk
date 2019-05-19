@@ -56,17 +56,17 @@ NXDK_CFLAGS  = -target i386-pc-win32 -march=pentium3 \
 NXDK_ASFLAGS = -target i386-pc-win32 -march=pentium3 \
                -nostdlib -I$(NXDK_DIR)/lib -I$(NXDK_DIR)/lib/xboxrt
 NXDK_CXXFLAGS = $(NXDK_CFLAGS)
+NXDK_LDFLAGS = -subsystem:windows -dll -out:'$@' -entry:XboxCRTEntry \
+               -stack:$(NXDK_STACKSIZE)
 
 ifeq ($(DEBUG),y)
 NXDK_CFLAGS += -g
 NXDK_CXXFLAGS += -g
-LDFLAGS += -debug
+NXDK_LDFLAGS += -debug
 endif
 
-NXDK_CFLAGS += $(CFLAGS)
-NXDK_CXXFLAGS += $(CXXFLAGS)
-
 include $(NXDK_DIR)/lib/Makefile
+NXDK_OBJS += $(addsuffix .obj, $(basename $(NXDK_SRCS)))
 OBJS += $(addsuffix .obj, $(basename $(SRCS)))
 
 ifneq ($(GEN_XISO),)
@@ -93,7 +93,11 @@ else
 QUIET=>/dev/null
 endif
 
-DEPS := $(filter %.c.d, $(SRCS:.c=.c.d))
+NXDK_DEPS = 
+NXDK_DEPS += $(filter %.c.d, $(NXDK_SRCS:.c=.c.d))
+NXDK_DEPS += $(filter %.cpp.d, $(NXDK_SRCS:.cpp=.cpp.d)) 
+
+DEPS += $(filter %.c.d, $(SRCS:.c=.c.d))
 DEPS += $(filter %.cpp.d, $(SRCS:.cpp=.cpp.d))
 
 all: $(TARGET)
@@ -113,21 +117,21 @@ endif
 
 $(SRCS): $(SHADER_OBJS)
 
-main.exe: $(OBJS) $(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
+main.exe: $(OBJS) $(NXDK_OBJS) $(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
 	@echo "[ LD       ] $@"
-	$(VE) $(LD) $(LDFLAGS) -subsystem:windows -dll -out:'$@' -entry:XboxCRTEntry -stack:$(NXDK_STACKSIZE) $^
+	$(VE) $(LD) $(NXDK_LDFLAGS) $(LDFLAGS) $^
 
 %.obj: %.cpp
 	@echo "[ CXX      ] $@"
-	$(VE) $(CXX) $(NXDK_CXXFLAGS) -MD -MT '$@' -MF '$(patsubst %.cpp,%.cpp.d,$<)' -c -o '$@' '$<'
+	$(VE) $(CXX) $(NXDK_CXXFLAGS) $(CXXFLAGS) -MD -MT '$@' -MF '$(patsubst %.cpp,%.cpp.d,$<)' -c -o '$@' '$<'
 
 %.obj: %.c
 	@echo "[ CC       ] $@"
-	$(VE) $(CC) $(NXDK_CFLAGS) -MD -MT '$@' -MF '$(patsubst %.c,%.c.d,$<)' -c -o '$@' '$<'
+	$(VE) $(CC) $(NXDK_CFLAGS) $(CFLAGS) -MD -MT '$@' -MF '$(patsubst %.c,%.c.d,$<)' -c -o '$@' '$<'
 
 %.obj: %.s
 	@echo "[ AS       ] $@"
-	$(VE) $(AS) $(NXDK_ASFLAGS) -c -o '$@' '$<'
+	$(VE) $(AS) $(NXDK_ASFLAGS) $(ASFLAGS) -c -o '$@' '$<'
 
 %.inl: %.vs.cg $(VP20COMPILER)
 	@echo "[ CG       ] $@"
@@ -168,11 +172,13 @@ $(EXTRACT_XISO):
 clean:
 	$(VE)rm -f $(TARGET) \
 	           main.exe main.exe.manifest main.lib \
-	           $(OBJS) $(SHADER_OBJS) $(DEPS) \
-	           $(GEN_XISO)
+	           $(OBJS) $(DEPS) \
+	           $(SHADER_OBJS) \
+	           $(GEN_XISO) \
 
 .PHONY: distclean 
 distclean: clean
+	$(VE)rm -f $(NXDK_OBJS) $(NXDK_DEPS) \
 	$(VE)$(MAKE) -C $(NXDK_DIR)/tools/extract-xiso clean $(QUIET)
 	$(VE)$(MAKE) -C $(NXDK_DIR)/tools/fp20compiler distclean $(QUIET)
 	$(VE)$(MAKE) -C $(NXDK_DIR)/tools/vp20compiler distclean $(QUIET)
