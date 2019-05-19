@@ -61,10 +61,12 @@ void BootStartUSB(void)
 	UsbKeyBoardInit();
 	UsbMouseInit();
 
+#if 0
 	for(n=0;n<200;n++) {
 		USBGetEvents();
 		wait_ms(1);
 	}
+#endif
 }
 /*------------------------------------------------------------------------*/ 
 void USBGetEvents(void)

@@ -1,0 +1,37 @@
+ifeq ($(DXT_TITLE),)
+DXT_TITLE = nxdk_app
+endif
+
+LDFLAGS = $(NXDK_DIR)/lib/xbdm/libxbdm.lib
+
+# Hack because nxdk doesn't handle overwriting the entry point.
+# To work around this, we add it as stacksize, which is appended to LDFLAGS.
+NXDK_STACKSIZE=65536 -entry:DxtEntry
+
+
+# This is the first target to avoid an XBE.
+# A bit of a hack because bin/ does not exist.
+#
+# Now to a problem we solve here: sections must have raw-address = virtual-address
+# The loader in XBDM.dll does not remap sections.
+# Typically this would crash during relocation (using .reloc)
+#
+#FIXME: we can't even use -align, because that's also broken (https://bugs.llvm.org/show_bug.cgi?id=41582)
+#       -filealign also isn't supported in lld-link
+#
+#       llvm-objcopy also can't do it, so we must rely on objcopy.
+#       This would be ideal:
+#
+#         @objcopy --file-alignment=0x20 --section-alignment=0x20 --image-base=0x400000 --subsystem:xbox "$<" "$@"
+#
+#       But it doesn't recalculate the section addresses, so we just try to make file-alignment same as section-alignment.
+#
+bin/$(DXT_TITLE).dxt: main.exe
+	@echo "[ BUILD    ] $@"
+	@mkdir -p bin/
+	@objcopy --file-alignment=0x1000 "$<" "$@"
+
+#FIXME: objcopy alone isn't enough; some sections will still shift content around; we merge those
+LDFLAGS += -merge:.tls=.text -merge:.rdata=.data
+
+include $(NXDK_DIR)/Makefile

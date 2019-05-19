@@ -3,4 +3,6 @@
 
 #include <xboxkrnl/xboxdef.h>
 
+#define WINAPI __stdcall
+
 #endif

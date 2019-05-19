@@ -7,6 +7,7 @@
 // #include <sys/types.h>
 // #include <openxdk/openxdk.h>
 #include <xboxkrnl/xboxkrnl.h>
+#include <winapi/winbase.h>
 
 /* a retail Xbox has 64 MB of RAM */
 #define RAMSIZE (64 * 1024*1024)
@@ -24,7 +25,12 @@ void *malloc2(size_t  s)
 	PVOID *virt_addr;
 	
 	//virt_addr = MmAllocateContiguousMemory(s);
-
+  char buffer[1024];
+  sprintf(buffer, "Allocating %d bytes\n", s);
+  OutputDebugString(buffer);
+  if (s == 0) {
+    s = 1;
+  }
 	virt_addr = MmAllocateContiguousMemoryEx(s, MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
 	return virt_addr;
 }
