@@ -9,6 +9,7 @@
 #pragma once
 
 #include <xboxkrnl/xboxdef.h>
+#include <xboxkrnl/xboxnt.h>
 
 /* stop clang from crying */
 #pragma clang diagnostic push
@@ -132,12 +133,12 @@ typedef enum _MODE {
 /**
  * This struct defines a counted string used for ANSI-strings
  */
-typedef struct _ANSI_STRING
+typedef struct
 {
     USHORT Length;        /**< Length in bytes of the string stored in the buffer */
     USHORT MaximumLength; /**< Length in bytes of the buffer */
     PSTR Buffer;          /**< Pointer to the buffer used for the character-string */
-} ANSI_STRING, *PANSI_STRING, STRING, *PSTRING, OBJECT_STRING, *POBJECT_STRING;
+} STRING, *PSTRING, OBJECT_STRING, *POBJECT_STRING;
 
 /**
  * This struct defines a counted string used for UNICODE-strings
