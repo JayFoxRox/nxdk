@@ -108,6 +108,8 @@ void main(void)
         pb_end(p);
         p = pb_begin();
 
+  pb_push2(p,NV20_TCL_PRIMITIVE_3D_POLYGON_MODE_FRONT,0x1B01,0x1B01); p+=3; //FillMode="solid" BackFillMode="point"
+
         /* Clear all attributes */
         pb_push(p++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT,16);
         for(i = 0; i < 16; i++) {
@@ -117,11 +119,11 @@ void main(void)
 
         /* Set vertex position attribute */
         set_attrib_pointer(0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-                           3, sizeof(ColoredVertex), &alloc_vertices[0]);
+                           3, sizeof(ColoredVertex), MmGetPhysicalAddress(&alloc_vertices[0]));
 
         /* Set vertex diffuse color attribute */
         set_attrib_pointer(3, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-                           3, sizeof(ColoredVertex), &alloc_vertices[3]);
+                           3, sizeof(ColoredVertex), MmGetPhysicalAddress(&alloc_vertices[3]));
 
         /* Begin drawing triangles */
         draw_arrays(NV097_SET_BEGIN_END_OP_TRIANGLES, 0, num_vertices);

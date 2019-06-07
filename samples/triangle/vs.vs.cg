@@ -17,7 +17,7 @@ vOut main(
 	float4 position;
 
 	position = mul(float4(I.position.xyz, 1.0f), m_viewport);
-	position.xyz = position.xyz / position.w;
+	//position.xyz = position.xyz / position.w;
 
 	result.col = I.color;
 	result.pos = position;

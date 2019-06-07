@@ -133,13 +133,13 @@ main.exe: $(OBJS) $(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
 	@echo "[ CG       ] $@"
 	$(VE) $(CGC) -profile vp20 -o $@.$$$$ $< $(QUIET) && \
 	$(VP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
+	true #rm -rf $@.$$$$
 
 %.inl: %.ps.cg $(FP20COMPILER)
 	@echo "[ CG       ] $@"
 	$(VE) $(CGC) -profile fp20 -o $@.$$$$ $< $(QUIET) && \
 	$(FP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
+	true #rm -rf $@.$$$$
 
 tools: $(TOOLS)
 .PHONY: tools $(TOOLS)
