@@ -17,6 +17,9 @@
 
 #include <xboxkrnl/xboxkrnl.h>
 
+#include "nxdk-rdt/net.h"
+#include "nxdk-rdt/dbgd.h"
+
 #define BUTTON_DEADZONE 0x20
 
 static uint32_t *alloc_vertices;
@@ -124,6 +127,11 @@ void main(void) {
   debugPrint("Setting video mode\n");
 
   XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+
+  debugPrint("Initializing nxdk-rdt\n");
+
+  net_init();
+  dbgd_init();
 
   debugPrint("Initializing pbkit\n");
 

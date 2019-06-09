@@ -15,3 +15,6 @@
 [submodule "lib/sdl/SDL_ttf"]
 	path = lib/sdl/SDL_ttf
 	url = https://github.com/SDL-mirror/SDL_ttf
+[submodule "samples/textures/nxdk-rdt"]
+	path = samples/textures/nxdk-rdt
+	url = https://github.com/XboxDev/nxdk-rdt.git
