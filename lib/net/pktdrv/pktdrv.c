@@ -696,13 +696,17 @@ static void __stdcall MyPktdrvDpc(		PKDPC Dpc,
 			NVREG_IRQSTAT_BIT2EVENT	|
 			NVREG_IRQSTAT_UNKEVENT;
 
+  BOOLEAN signal_rx = FALSE;
+
 	while (irq_status)
 	{
 		if (irq_status & NVREG_IRQSTAT_MIIEVENT) PktdrvMiiInterrupt(0);
 		REG(NvRegMIIStatus)=mii_status;
 		REG(NvRegIrqStatus)=irq_status;
 //uncomment this line if you want your callback to be called as soon as packet arrived
-//		PktdrvRecvInterrupt(); //Check if we received packets // (let them stock up)
+  debugPrint("---\n");
+		//PktdrvRecvInterrupt(); //Check if we received packets // (let them stock up)
+    signal_rx = TRUE;
 		PktdrvSendInterrupt(); //Check if we have a packet to send
 
 		if (irq_status & NVREG_IRQSTAT_BIT1EVENT)
@@ -716,6 +720,11 @@ static void __stdcall MyPktdrvDpc(		PKDPC Dpc,
 				NVREG_IRQ_RX_NOBUF |
 				NVREG_IRQ_RX |
 				NVREG_IRQ_RX_ERROR;
+
+  if (signal_rx) {
+    debugPrint("Informing about packets\n");
+    KePulseEvent(&g_event, 0, FALSE);
+  }
 
 	return;
 }
@@ -737,7 +746,17 @@ void Pktdrv_Quit(void)
 
 
 
-
+static void packet_receiver(void* arg) {
+  while(1) {
+    debugPrint("Waiting for packets\n");
+    LARGE_INTEGER nt_timeout;
+    nt_timeout.QuadPart = 0;
+    KeWaitForSingleObject(&g_event, Executive, KernelMode, FALSE, &nt_timeout);
+    
+    debugPrint("Receiving packets\n");
+    Pktdrv_ReceivePackets();
+  }
+}
 
 //Returns 1 if everything is ok
 int Pktdrv_Init(void)
@@ -753,6 +772,12 @@ int Pktdrv_Init(void)
 	ULONG	RandomValue;
 
 	if (g_running==1) return 1;
+
+  // Create thread to handle packet reception
+  KeInitializeEvent(&g_event, NotificationEvent, FALSE);
+
+  //FIXME: Use kernel thread stuff
+  XCreateThread((void *)packet_receiver, NULL, NULL);
 
 	g_s=(struct s_MyStructures *)malloc(sizeof(struct s_MyStructures));
 	//g_s holds the various needed structures
