@@ -81,6 +81,7 @@ struct s_MyStructures {
 static int 			g_running=0;
 static struct s_MyStructures 	*g_s;
 static KINTERRUPT 		s_MyInterruptObject;
+static KEVENT g_event;
 
 
 
@@ -333,6 +334,11 @@ enum {
 #define NV_RX_ERROR		(1<<30)
 #define NV_RX_AVAIL		(1<<31)
 
+// Crash on 0x21003C
+// 21 = ?
+// 16 = NV_RX_DESCRIPTORVALID
+
+
 
 //PhyGetLinkState
 #define PHY_LINK_RUNNING	0x01
@@ -390,6 +396,8 @@ static int PktdrvRecvInterrupt(void)
 		p=g_s->RxBufferNext;
 		flag=*((ULONG *)(p+4));
 
+    debugPrint("PktdrvRecvInterrupt: flag is 0x%X\n", flag);
+
 		if (flag & NV_RX_AVAIL) return n; //we received nothing!
 
 		if ((flag & NV_RX_DESCRIPTORVALID) == 0)
@@ -413,18 +421,29 @@ static int PktdrvRecvInterrupt(void)
 
 			if (!fatal)
 			{
+        debugPrint("Not fatal\n");
 				//Call user callback and warn that a packet has been received
 				//Phys Addr of packet is *p
 				//Length of packet is 1 up to 2046 bytes
 				//Length = ( (*((ULONG *)(p+4))) & 0x7FF ) + 1
+
+        unsigned int length = flag & 0xFFFF;
+
+        if (flag & NV_RX_SUBSTRACT1) {
+          length--;
+        }
+
 				handled=Pktdrv_Callback(
 				(unsigned char *)( (*((ULONG *)p))-g_s->PhysicalMinusVirtual),
-				(unsigned int)( ( (*((ULONG *)(p+4))) & 0x7FF ) + 1 )	);
+				length);
+        debugPrint("Handled: %d\n", handled);
 				if (!handled) 
 					return n; //We probably lack space up there
 				else
 					n++;
-			}
+			} else {
+        debugPrint("Oops! fatal\n");
+      }
 		}
 
 		//Empty the entry
@@ -775,14 +794,14 @@ int Pktdrv_Init(void)
 		0,		//lowest acceptable
 		0x10000,	//highest acceptable
 		0,  		//no need to align to specific boundaries multiple
-		MmNonCachedUnordered);	//4
+		0x204);	//4
 	if (!buffers_addr)
 		buffers_addr=(ULONG)MmAllocateContiguousMemoryEx(
 			buffers_total_size,
 			0,		//lowest acceptable
 			0xFFFFFFFF,	//highest acceptable
 			0,  		//no need to align to specific boundaries multiple
-			MmNonCachedUnordered);	//4
+			0x204);	//4
 	if (!buffers_addr) 
 	{
 		debugPrint("Can't allocate DMA reception buffers\n");

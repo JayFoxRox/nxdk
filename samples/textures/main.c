@@ -144,6 +144,9 @@ void main(void) {
   }
 
   pb_show_front_screen();
+  pb_show_debug_screen(); //FIXME: Remove.. hack..
+
+while(1);
 
   // Initialize input
   XInput_Init();

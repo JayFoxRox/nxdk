@@ -70,9 +70,12 @@ void nforceif_input(struct netif *netif);
 
 int Pktdrv_Callback(unsigned char *packetaddr, unsigned int size)
 {
+  debugPrint("Callack: size is %u / 1520\n", size);
   g_rx_buffer_packetsize=size;
   memcpy(g_rx_buffer,packetaddr,g_rx_buffer_packetsize);
+  debugPrint("Read data\n");
   nforceif_input(g_pnetif);
+  debugPrint("Forwarded data\n");
   return 1;
 }
 
@@ -127,14 +130,14 @@ low_level_init(struct netif *netif)
       0,    //lowest acceptable
       0xFFFFFFFF, //highest acceptable
       0,      //no need to align to specific boundaries multiple
-      4);   //non cached, non ordered
+      0x204);   //non cached, non ordered
 
   g_tx_buffer=(unsigned char *)MmAllocateContiguousMemoryEx(
       1520,
       0,    //lowest acceptable
       0xFFFFFFFF, //highest acceptable
       0,      //no need to align to specific boundaries multiple
-      4);   //non cached, non ordered
+      0x204);   //non cached, non ordered
 
   if (!g_rx_buffer || !g_tx_buffer)
   {
@@ -217,12 +220,13 @@ low_level_input(struct netif *netif)
   len = g_rx_buffer_packetsize;
 
 #if ETH_PAD_SIZE
+debugPrint("Adding padding space\n");
   len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
 #endif
 
   /* We allocate a pbuf chain of pbufs from the pool. */
   p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
-
+debugPrint("Allocating a buffer\n");
   if (p != NULL) {
 
 #if ETH_PAD_SIZE
@@ -241,6 +245,8 @@ low_level_input(struct netif *netif)
        * pbuf is the sum of the chained pbuf len members.
        */
       // read data into(q->payload, q->len);
+debugPrint("Copying data.. ");
+debugPrint("%u bytes\n", q->len);
       memcpy(q->payload, g_rx_buffer+buf_pos, q->len);
       buf_pos += q->len;
     }
@@ -251,11 +257,16 @@ low_level_input(struct netif *netif)
     pbuf_header(p, ETH_PAD_SIZE); /* reclaim the padding word */
 #endif
 
+debugPrint("???\n");
     LINK_STATS_INC(link.recv);
+debugPrint("!!!\n");
   } else {
     // drop packet();
+debugPrint("???\n");
     LINK_STATS_INC(link.memerr);
+debugPrint("?!\n");
     LINK_STATS_INC(link.drop);
+debugPrint("!!!\n");
   }
 
   return p;
@@ -277,13 +288,19 @@ nforceif_input(struct netif *netif)
   struct eth_hdr *ethhdr;
   struct pbuf *p;
 
+  debugPrint("in nforceif_input\n");
+
   nforceif = netif->state;
+
+
 
   /* move received packet into a new pbuf */
   p = low_level_input(netif);
+  debugPrint("low_level_input returned\n");
   /* no packet could be read, silently ignore this */
   if (p == NULL) return;
   /* points to packet payload, which starts with an Ethernet header */
+  debugPrint("checking ethhdr\n");
   ethhdr = p->payload;
 
   switch (htons(ethhdr->type)) {
@@ -297,14 +314,17 @@ nforceif_input(struct netif *netif)
   case ETHTYPE_PPPOE:
 #endif /* PPPOE_SUPPORT */
     /* full packet send to tcpip_thread to process */
+  debugPrint("passing to netif->input\n");
     if (netif->input(p, netif)!=ERR_OK)
      { LWIP_DEBUGF(NETIF_DEBUG, ("nforceif_input: IP input error\n"));
        pbuf_free(p);
        p = NULL;
      }
+  debugPrint("danone\n");
     break;
 
   default:
+  debugPrint("before pbuf_free\n");
     pbuf_free(p);
     p = NULL;
     break;
