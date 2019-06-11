@@ -3569,8 +3569,8 @@ int pb_init(void)
 
     pb_DSSize=Size;
 
-    //multiply size by number of physical frame buffers in order to obtain global size
-    DSSize=Size*FrameBufferCount;
+    // We use one shared depthbuffer
+    DSSize=Size; //FIXME: WTF?!
 
     //Huge alignment enforcement (16 Kb aligned!) for the global size
     DSSize=(DSSize+0x3FFF)&0xFFFFC000;
