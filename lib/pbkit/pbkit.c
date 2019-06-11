@@ -2019,7 +2019,7 @@ void pb_target_extra_buffer(int index_buffer)
         //DMA channel 10 is used by GPU in order to render depth stencil
         if (depth_stencil)
         {
-            dma_addr=pb_DSAddr&0x03FFFFFF;
+            dma_addr=0;//pb_DSAddr&0x03FFFFFF;
             dma_limit=height*pitch_depth_stencil-1; //(last byte)
             dma_flags=DMA_CLASS_3D|0x0000B000;
             dma_addr|=3;
@@ -2048,7 +2048,7 @@ void pb_target_extra_buffer(int index_buffer)
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT4,10); p+=2;
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_DEPTH_TEST_ENABLE,flag); p+=2; //ZEnable=TRUE or FALSE (But don't use W, see below)
         //FIXME: Disable
-        pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,1); p+=2;   //StencilEnable=TRUE
+        pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,0); p+=2;   //StencilEnable=TRUE
         pb_end(p);
 
         pb_DepthStencilLast=depth_stencil;
