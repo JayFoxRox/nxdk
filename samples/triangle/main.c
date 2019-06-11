@@ -54,6 +54,8 @@ void main(void)
 
     XVideoSetMode(640, 480, 16, REFRESH_DEFAULT);
 
+    pb_set_zeta_format(16, FALSE);
+
     if ((status = pb_init())) {
         debugPrint("pb_init Error %d\n", status);
         XSleep(2000);
@@ -72,7 +74,7 @@ void main(void)
     alloc_vertices = MmAllocateContiguousMemoryEx(sizeof(verts), 0, 0x3ffb000, 0, 0x404);
     memcpy(alloc_vertices, verts, sizeof(verts));
     num_vertices = sizeof(verts)/sizeof(verts[0]);
-    matrix_viewport(m_viewport, 0, 0, width, height, 0, 65536.0f);
+    matrix_viewport(m_viewport, 0, 0, width, height, 0, 65535.0f);
 
     /* Setup to determine frames rendered every second */
     start = now = last = XGetTickCount();

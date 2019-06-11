@@ -1899,7 +1899,7 @@ void pb_target_back_buffer(void)
         if (depth_stencil)
         {
             dma_addr=pb_DSAddr&0x03FFFFFF;
-            dma_limit=height*pitch_depth_stencil-1; //(last byte)
+            dma_limit=64 * 1024 * 1024 - INSTANCE_MEM_MAXSIZE - 1; //height*pitch_depth_stencil-1; //(last byte)
             dma_flags=DMA_CLASS_3D|0x0000B000;
             dma_addr|=3;
             flag=1;
@@ -2179,7 +2179,7 @@ unsigned int pb_ColorBpp = 0;
 unsigned int pb_ZetaBpp = 32; //FIXME: ?
 int pb_ZetaFixed = 0; //FIXME: bool?
 
-void pb_set_zeta_depth(unsigned int bpp, int fixed)
+void pb_set_zeta_format(unsigned int bpp, int fixed)
 {
     pb_ZetaBpp = bpp;
 
@@ -2493,12 +2493,6 @@ void pb_show_front_screen(void)
 void pb_show_debug_screen(void)
 {
     VIDEOREG(PCRTC_START)=((DWORD)XVideoGetFB())&0x0FFFFFFF;
-    pb_debug_screen_active=1;
-}
-
-void pb_show_depth_screen(void)
-{
-    VIDEOREG(PCRTC_START)=pb_DSAddr&0x0FFFFFFF;
     pb_debug_screen_active=1;
 }
 
@@ -3603,7 +3597,6 @@ int pb_init(void)
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
     Pitch=(((pb_ZetaBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
-    pb_DepthStencilPitch=Pitch;
 
     //look for a standard listed pitch value greater or equal to theoretical one
     for(i=0;i<16;i++)
@@ -3614,6 +3607,8 @@ int pb_init(void)
             break;
         }
     }
+
+    pb_DepthStencilPitch=Pitch;
 
     Size=Pitch*VSize;
 
@@ -3651,7 +3646,7 @@ int pb_init(void)
             Pitch,              //DWORD tile_pitch,
             0,              //DWORD tile_z_start_tag,
             0,              //DWORD tile_z_offset,
-            tile_flags          //DWORD tile_flags (0x04000000 for 32 bits)
+            tile_flags          //DWORD tile_flags
             );
 
 
