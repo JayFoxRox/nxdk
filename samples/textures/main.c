@@ -162,8 +162,8 @@ void main(void) {
   num_vertices = ARRAY_SIZE(vertices);
 
   //Generate a texture
-  int texture_width = 256;
-  int texture_height = 256;
+  int texture_width = 2;
+  int texture_height = 2;
   int texture_pitch = texture_width * 4;
   uint32_t* pixels = NULL;
   pixels = MmAllocateContiguousMemoryEx(texture_pitch * texture_height, 0, 0x3ffb000, 0, 0x404);
@@ -173,7 +173,7 @@ void main(void) {
       color = 0x00000000 | (x << 16) | (y << 8);
 
       //FIXME: Checkerboard is interesting to see interpolation
-      //color = ((x + (y & 8)) & 8) ? 0xFFFFFFFF : 0xFF0000FF;
+      color = ((x + (y & 1)) & 1) ? 0xFFFFFFFF : 0xFF0000FF;
 
       pixels[y * texture_width + x] = color;
     }
