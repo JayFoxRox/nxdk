@@ -16,8 +16,6 @@ GEN_XISO = $(XBE_TITLE).iso
 
 SRCS += $(CURDIR)/nxdk-rdt/net.c
 SRCS += $(CURDIR)/nxdk-rdt/dbgd.c
-SRCS += $(CURDIR)/nxdk-rdt/lib/protobuf-c/protobuf-c.c
-SRCS += $(CURDIR)/nxdk-rdt/dbg.pb-c.c
 
 CFLAGS += -I$(CURDIR)/
 CFLAGS += -I$(CURDIR)/nxdk-rdt/lib
