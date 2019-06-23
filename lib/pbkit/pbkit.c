@@ -1758,7 +1758,9 @@ static void pb_jump_to_head(void)
 
         if (KeTickCount-TimeStampTicks>TICKSTIMEOUT)
         {
+#ifdef DBG
             debugPrint("pb_reset: too long\n");
+#endif
             break;
         }
 
