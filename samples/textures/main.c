@@ -130,8 +130,8 @@ void main(void) {
 
   debugPrint("Initializing nxdk-rdt\n");
 
-  net_init();
-  dbgd_init();
+//  net_init();
+//  dbgd_init();
 
   debugPrint("Initializing pbkit\n");
 
@@ -144,9 +144,9 @@ void main(void) {
   }
 
   pb_show_front_screen();
-  pb_show_debug_screen(); //FIXME: Remove.. hack..
+//  pb_show_debug_screen(); //FIXME: Remove.. hack..
 
-while(1);
+//while(1);
 
   // Initialize input
   XInput_Init();
