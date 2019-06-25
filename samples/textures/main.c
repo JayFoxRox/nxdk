@@ -162,22 +162,70 @@ void main(void) {
   num_vertices = ARRAY_SIZE(vertices);
 
   //Generate a texture
-  int texture_width = 2;
-  int texture_height = 2;
-  int texture_pitch = texture_width * 4;
-  uint32_t* pixels = NULL;
-  pixels = MmAllocateContiguousMemoryEx(texture_pitch * texture_height, 0, 0x3ffb000, 0, 0x404);
+  int texture_width = 16;
+  int texture_height = 16;
+  uint8_t* pixels = NULL;
+
+  int texture_fmt = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8; //FIXME: Does NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8; work?
+  texture_fmt = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8;
+  //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8
+  //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8
+  //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5
+  //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4
+
+  // Allocates 32bpp, for worst case
+  pixels = MmAllocateContiguousMemoryEx(texture_width * texture_height * 4, 0, 0x3ffb000, 0, 0x404);
+
+  uint8_t* cursor = pixels;
   for(int y = 0; y < texture_height; y++) {
     for(int x = 0; x < texture_width; x++) {
       uint32_t color = 0;
-      color = 0x00000000 | (x << 16) | (y << 8);
 
-      //FIXME: Checkerboard is interesting to see interpolation
-      color = ((x + (y & 1)) & 1) ? 0xFFFFFFFF : 0xFF0000FF;
+      uint8_t r = x;
+      uint8_t g = y;
+      uint8_t b = 0x00;
+      uint8_t a = 0xFF;
 
-      pixels[y * texture_width + x] = color;
+#if 1
+      // Checkerboard is interesting to see interpolation
+      int checker_x = 1 << 2;
+      int checker_y = checker_x;
+      uint8_t checker_mask = ((x + (y & checker_y)) & checker_x) ? 0xFF : 0x00;
+      r ^= checker_mask;
+      g ^= checker_mask;
+      b ^= checker_mask;
+      a ^= checker_mask;
+#endif
+
+      if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8) {
+        *(uint32_t*)cursor = (a << 24) | (r << 16) | (g << 8) | b;
+        cursor += 4;
+      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8) {
+        *(uint16_t*)cursor = (a << 8) | r;
+        cursor += 2;
+      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5) {
+        a >>= 8 - 1;
+        r >>= 8 - 5;
+        g >>= 8 - 5;
+        b >>= 8 - 5;
+        *(uint16_t*)cursor = (a << 16) | (r << 10) | (g << 5) | b;
+        cursor += 2;
+      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4) {
+        a >>= 8 - 4;
+        r >>= 8 - 4;
+        g >>= 8 - 4;
+        b >>= 8 - 4;
+        *(uint16_t*)cursor = (a << 12) | (r << 8) | (g << 4) | b;
+        cursor += 2;
+      } else {
+        assert(false);
+      }
+
     }
   }
+
+  // Calculate texture pitch
+  int texture_pitch = (cursor - pixels) / texture_height;
 
   while(1) {
     pb_wait_for_vbl();
@@ -236,8 +284,6 @@ void main(void) {
     // Set up texture
     p=pb_begin();
 
-    int texture_fmt = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8;
-    texture_fmt = 0x12;
     pb_push2(p,NV20_TCL_PRIMITIVE_3D_TX_OFFSET(0),(DWORD)(MmGetPhysicalAddress(pixels) & 0x03ffffff), (0x0001002a | (texture_fmt << 8))); p+=3; //set stage 0 texture address & format
     pb_push1(p,NV20_TCL_PRIMITIVE_3D_TX_NPOT_PITCH(0),texture_pitch<<16); p+=2; //set stage 0 texture pitch (pitch<<16)
     pb_push1(p,NV20_TCL_PRIMITIVE_3D_TX_NPOT_SIZE(0),(texture_width<<16)|texture_height); p+=2; //set stage 0 texture width & height ((witdh<<16)|height)
