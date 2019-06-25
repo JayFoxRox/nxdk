@@ -390,7 +390,7 @@ void main(void) {
     draw_arrays(NV097_SET_BEGIN_END_OP_QUADS, 0, num_vertices);
 
     // Draw some text on the screen
-    pb_print("Textures\n");
+    pb_print("Textures %d x %d (format 0x%X)\n", texture_width, texture_height, texture_fmt);
     pb_print("random: %d\n", rand());
     char signed_text[5];
     strcpy(signed_text, "    ");
