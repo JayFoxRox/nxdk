@@ -311,12 +311,36 @@ void main(void) {
     texture_signed[2] = (g_Pads[0].CurrentButtons.ucAnalogButtons[XPAD_X] > BUTTON_DEADZONE);
     texture_signed[3] = (g_Pads[0].CurrentButtons.ucAnalogButtons[XPAD_Y] > BUTTON_DEADZONE);
 
+//FIXME: Use other ones.. this doesn't write pgraph
 #   define NV_PGRAPH_TEXFILTER0_ASIGNED                         (1 << 28)
 #   define NV_PGRAPH_TEXFILTER0_RSIGNED                         (1 << 29)
 #   define NV_PGRAPH_TEXFILTER0_GSIGNED                         (1 << 30)
 #   define NV_PGRAPH_TEXFILTER0_BSIGNED                         (1 << 31)
 
-    uint32_t texture_filter = 0x04074000;
+    uint32_t texture_filter = 0x0;
+
+#   define NV_097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX             0x1
+#   define NV_097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3           0x2
+
+    texture_filter |= NV_097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX << 13;
+
+#   define NV_097_SET_TEXTURE_FILTER_MIN_BOX_LOD0              0x01
+#   define NV_097_SET_TEXTURE_FILTER_MIN_TENT_LOD0             0x02
+#   define NV_097_SET_TEXTURE_FILTER_MIN_BOX_NEARESTLOD        0x03
+#   define NV_097_SET_TEXTURE_FILTER_MIN_TENT_NEARESTLOD       0x04
+#   define NV_097_SET_TEXTURE_FILTER_MIN_BOX_TENT_LOD          0x05
+#   define NV_097_SET_TEXTURE_FILTER_MIN_TENT_TENT_LOD         0x06
+#   define NV_097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0   0x07
+
+
+#   define NV_097_SET_TEXTURE_FILTER_MAG_BOX_LOD0              0x01
+#   define NV_097_SET_TEXTURE_FILTER_MAG_TENT_LOD0             0x02
+#   define NV_097_SET_TEXTURE_FILTER_MAG_CONVOLUTION_2D_LOD0   0x04
+
+    texture_filter |= NV_097_SET_TEXTURE_FILTER_MIN_TENT_LOD0 << 16;
+    texture_filter |= NV_097_SET_TEXTURE_FILTER_MAG_TENT_LOD0 << 24;
+
+
     if (texture_signed[0]) { texture_filter |= NV_PGRAPH_TEXFILTER0_RSIGNED; }
     if (texture_signed[1]) { texture_filter |= NV_PGRAPH_TEXFILTER0_GSIGNED; }
     if (texture_signed[2]) { texture_filter |= NV_PGRAPH_TEXFILTER0_BSIGNED; }
