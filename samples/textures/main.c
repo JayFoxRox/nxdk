@@ -197,6 +197,18 @@ void main(void) {
       a ^= checker_mask;
 #endif
 
+#if 0
+      bool hit = false;
+      hit |= ((x == 3) && (y == 10));
+      hit |= ((x == 11) && (y == 10));
+      hit |= ((x == 11) && (y == 5));
+
+      r = hit ? 0xFF : 0x00;
+      g = 0;
+      b = 0;
+      a = 0;
+#endif
+
       if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8) {
         *(uint32_t*)cursor = (a << 24) | (r << 16) | (g << 8) | b;
         cursor += 4;
