@@ -162,11 +162,14 @@ void main(void) {
   num_vertices = ARRAY_SIZE(vertices);
 
   //Generate a texture
-  int texture_width = 16;
-  int texture_height = 16;
+  int texture_width = 256;
+  int texture_height = 256;
   uint8_t* pixels = NULL;
 
-  int texture_fmt = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8; //FIXME: Does NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8; work?
+#define NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8    0x16
+#define NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_G8B8    0x17
+
+  int texture_fmt = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4; //FIXME: Does NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8; work?
 
   //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8
   //FIXME: NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8
@@ -183,17 +186,19 @@ void main(void) {
 
       uint8_t r = x;
       uint8_t g = y;
-      uint8_t b = 0x00;
-      uint8_t a = 0xFF;
+      uint8_t b = x ^ y;
+      uint8_t a = x + y;
 
 #if 1
       // Checkerboard is interesting to see interpolation
-      int checker_x = 1 << 2;
+      int checker_x = 1 << 4;
       int checker_y = checker_x;
       uint8_t checker_mask = ((x + (y & checker_y)) & checker_x) ? 0xFF : 0x00;
+/*
       r ^= checker_mask;
       g ^= checker_mask;
       b ^= checker_mask;
+*/
       a ^= checker_mask;
 #endif
 
@@ -215,12 +220,19 @@ void main(void) {
       } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8) {
         *(uint16_t*)cursor = (a << 8) | r;
         cursor += 2;
-      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5) {
+      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8) {
+        *(uint16_t*)cursor = (r << 8) | b;
+        cursor += 2;
+      } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_G8B8) {
+        *(uint16_t*)cursor = (g << 8) | b;
+        cursor += 2;
+      } else if ((texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5) ||
+                 (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A1R5G5B5)) {
         a >>= 8 - 1;
         r >>= 8 - 5;
         g >>= 8 - 5;
         b >>= 8 - 5;
-        *(uint16_t*)cursor = (a << 16) | (r << 10) | (g << 5) | b;
+        *(uint16_t*)cursor = (a << 15) | (r << 10) | (g << 5) | b;
         cursor += 2;
       } else if (texture_fmt == NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4) {
         a >>= 8 - 4;

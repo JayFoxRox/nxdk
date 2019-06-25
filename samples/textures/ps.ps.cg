@@ -9,5 +9,5 @@ float4 main(
   uniform sampler2D texture
 ) : COLOR
 {
-  return 0.5 + 0.5 * tex2D(texture, I.uv); //FIXME: * color_scale + color_bias;
+  return tex2D(texture, I.uv).aaaa * 0.5 + 0.5; //FIXME: * color_scale + color_bias;
 }
