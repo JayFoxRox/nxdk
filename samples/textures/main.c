@@ -17,8 +17,9 @@
 
 #include <xboxkrnl/xboxkrnl.h>
 
-#include "nxdk-rdt/net.h"
-#include "nxdk-rdt/dbgd.h"
+// Include nxdk-rdt files
+#include <net.h>
+#include <dbgd.h>
 
 #define BUTTON_DEADZONE 0x20
 
@@ -130,8 +131,8 @@ void main(void) {
 
   debugPrint("Initializing nxdk-rdt\n");
 
-//  net_init();
-//  dbgd_init();
+  net_init();
+  dbgd_init();
 
   debugPrint("Initializing pbkit\n");
 
