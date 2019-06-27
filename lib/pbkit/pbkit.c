@@ -3597,7 +3597,6 @@ int pb_init(void)
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
     Pitch=(((pb_ZetaBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
-    pb_DepthStencilPitch=Pitch;
 
     //look for a standard listed pitch value greater or equal to theoretical one
     for(i=0;i<16;i++)
@@ -3608,6 +3607,8 @@ int pb_init(void)
             break;
         }
     }
+
+    pb_DepthStencilPitch=Pitch;
 
     Size=Pitch*VSize;
 
