@@ -2482,12 +2482,6 @@ void pb_show_debug_screen(void)
     pb_debug_screen_active=1;
 }
 
-void pb_show_depth_screen(void)
-{
-    VIDEOREG(PCRTC_START)=pb_DSAddr&0x0FFFFFFF;
-    pb_debug_screen_active=1;
-}
-
 
 
 
