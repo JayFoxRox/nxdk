@@ -2545,8 +2545,10 @@ void pb_fill(int x, int y, int w, int h, DWORD color)
     x2=x+w;
     y2=y+h;
     
-    //if you supply 32 bits color and res is 16 bits, apply function below
-    //color=((color>>8)&0xF800)|((color>>5)&0x07E0)|((color>>3)&0x001F);
+    if (pb_ColorBpp == 16) {
+      //if you supply 32 bits color and res is 16 bits, apply transformation
+      color=((color>>8)&0xF800)|((color>>5)&0x07E0)|((color>>3)&0x001F);
+    }
 
     p=pb_begin();
     pb_push(p++,NV20_TCL_PRIMITIVE_3D_CLEAR_VALUE_HORIZ,2);     //sets rectangle coordinates
@@ -3450,9 +3452,35 @@ int pb_init(void)
     pb_DepthStencilLast=-2;
 
     vm=XVideoGetMode();
-    if (vm.bpp==32) pb_GPUFrameBuffersFormat=0x128;//A8R8G8B8
-    else pb_GPUFrameBuffersFormat=0x113;        //R5G6B5 (0x123 if D24S8 used, bpp 16 untested)
-    pb_ZScale=16777215.0f;              //D24S8
+    pb_ColorBpp = vm.bpp;
+
+    unsigned int depth_format;
+    if (pb_ZetaBpp == 32) {
+        //D24S8
+        depth_format = 0x2;
+        pb_ZScale = (float)0xFFFFFF;
+    } else if (pb_ZetaBpp == 16) {
+        // D16
+        depth_format = 0x1;
+        pb_ZScale = (float)0xFFFF;
+    } else {
+        //FIXME: Error
+    }
+
+    unsigned int color_format;
+    if (vm.bpp == 32) {
+        //A8R8G8B8
+        color_format = 0x8;
+    } else if (vm.bpp == 16) {
+        //R5G6B5
+        color_format = 0x3;
+    } else {
+        //FIXME: Error
+    }
+
+    // Activate pitched surface with chosen format
+    pb_GPUFrameBuffersFormat = 0x100 | (depth_format << 4) | color_format;
+
     Width=vm.width;
     Height=vm.height;
 
@@ -3549,8 +3577,7 @@ int pb_init(void)
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
-    Pitch=(((vm.bpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
-    pb_DepthStencilPitch=Pitch;
+    Pitch=(((pb_ZetaBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
 
     //look for a standard listed pitch value greater or equal to theoretical one
     for(i=0;i<16;i++)

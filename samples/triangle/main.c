@@ -52,6 +52,10 @@ void main(void)
     int       start, last, now;
     int       fps, frames, frames_total;
 
+    XVideoSetMode(640, 480, 16, REFRESH_DEFAULT);
+
+    pb_set_zeta_format(16, FALSE);
+
     if ((status = pb_init())) {
         debugPrint("pb_init Error %d\n", status);
         XSleep(2000);
