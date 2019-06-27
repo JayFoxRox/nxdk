@@ -1926,6 +1926,7 @@ void pb_target_back_buffer(void)
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER); p+=2;
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT4,10); p+=2;
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_DEPTH_TEST_ENABLE,flag); p+=2; //ZEnable=TRUE or FALSE (But don't use W, see below)
+        //FIXME: Disable
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,1); p+=2;   //StencilEnable=TRUE
         pb_end(p);
 
@@ -2046,6 +2047,7 @@ void pb_target_extra_buffer(int index_buffer)
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER); p+=2;
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT4,10); p+=2;
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_DEPTH_TEST_ENABLE,flag); p+=2; //ZEnable=TRUE or FALSE (But don't use W, see below)
+        //FIXME: Disable
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,1); p+=2;   //StencilEnable=TRUE
         pb_end(p);
 
@@ -2171,6 +2173,18 @@ void pb_extra_buffers(int n)
         debugPrint("Too many extra buffers\n");
     else
         pb_ExtraBuffersCount=n;
+}
+
+unsigned int pb_ColorBpp = 0;
+unsigned int pb_ZetaBpp = 32; //FIXME: ?
+int pb_ZetaFixed = 0; //FIXME: bool?
+
+void pb_set_zeta_format(unsigned int bpp, int fixed)
+{
+    pb_ZetaBpp = bpp;
+
+    //FIXME: Add support or warn
+    pb_ZetaFixed = fixed;
 }
 
 void pb_size(DWORD size)
@@ -2482,12 +2496,6 @@ void pb_show_debug_screen(void)
     pb_debug_screen_active=1;
 }
 
-void pb_show_depth_screen(void)
-{
-    VIDEOREG(PCRTC_START)=pb_DSAddr&0x0FFFFFFF;
-    pb_debug_screen_active=1;
-}
-
 
 
 
@@ -2545,8 +2553,10 @@ void pb_fill(int x, int y, int w, int h, DWORD color)
     x2=x+w;
     y2=y+h;
     
-    //if you supply 32 bits color and res is 16 bits, apply function below
-    //color=((color>>8)&0xF800)|((color>>5)&0x07E0)|((color>>3)&0x001F);
+    if (pb_ColorBpp == 16) {
+      //if you supply 32 bits color and res is 16 bits, apply transformation
+      color=((color>>8)&0xF800)|((color>>5)&0x07E0)|((color>>3)&0x001F);
+    }
 
     p=pb_begin();
     pb_push(p++,NV20_TCL_PRIMITIVE_3D_CLEAR_VALUE_HORIZ,2);     //sets rectangle coordinates
@@ -2579,14 +2589,25 @@ void pb_erase_depth_stencil_buffer(int x, int y, int w, int h)
     x2=x+w;
     y2=y+h;
     
+    DWORD z_clear_value = (DWORD)pb_ZScale;
+    BYTE stencil_clear_value = 0x00;
+
     p=pb_begin();
     pb_push(p++,NV20_TCL_PRIMITIVE_3D_CLEAR_VALUE_HORIZ,2);     //sets rectangle coordinates
     *(p++)=((x2-1)<<16)|x1;
     *(p++)=((y2-1)<<16)|y1;
     pb_push(p++,NV20_TCL_PRIMITIVE_3D_CLEAR_VALUE_DEPTH,3);     //sets data used to fill in rectangle
-    *(p++)=0xffffff00;      //(depth<<8)|stencil
+    if (pb_ZetaBpp == 32) {
+      *(p++)=(z_clear_value << 8) | stencil_clear_value;
+    } else {
+      *(p++)=z_clear_value & 0xFFFF;
+    }
     *(p++)=0;           //color
-    *(p++)=0x03;            //triggers the HW rectangle fill (only on D&S)
+    if (pb_ZetaBpp == 32) {
+      *(p++)=0x2 | 0x1;      //triggers the HW rectangle fill (only on S&D)
+    } else {
+      *(p++)=0x1;            //triggers the HW rectangle fill (only on D)
+    }
     pb_end(p);
 }
 
@@ -3450,9 +3471,35 @@ int pb_init(void)
     pb_DepthStencilLast=-2;
 
     vm=XVideoGetMode();
-    if (vm.bpp==32) pb_GPUFrameBuffersFormat=0x128;//A8R8G8B8
-    else pb_GPUFrameBuffersFormat=0x113;        //R5G6B5 (0x123 if D24S8 used, bpp 16 untested)
-    pb_ZScale=16777215.0f;              //D24S8
+    pb_ColorBpp = vm.bpp;
+
+    unsigned int depth_format;
+    if (pb_ZetaBpp == 32) {
+        //D24S8
+        depth_format = 0x2;
+        pb_ZScale = (float)0xFFFFFF;
+    } else if (pb_ZetaBpp == 16) {
+        // D16
+        depth_format = 0x1;
+        pb_ZScale = (float)0xFFFF;
+    } else {
+        //FIXME: Error
+    }
+
+    unsigned int color_format;
+    if (vm.bpp == 32) {
+        //A8R8G8B8
+        color_format = 0x8;
+    } else if (vm.bpp == 16) {
+        //R5G6B5
+        color_format = 0x3;
+    } else {
+        //FIXME: Error
+    }
+
+    // Activate pitched surface with chosen format
+    pb_GPUFrameBuffersFormat = 0x100 | (depth_format << 4) | color_format;
+
     Width=vm.width;
     Height=vm.height;
 
@@ -3549,8 +3596,7 @@ int pb_init(void)
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
-    Pitch=(((vm.bpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
-    pb_DepthStencilPitch=Pitch;
+    Pitch=(((pb_ZetaBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
 
     //look for a standard listed pitch value greater or equal to theoretical one
     for(i=0;i<16;i++)
@@ -3562,6 +3608,8 @@ int pb_init(void)
         }
     }
 
+    pb_DepthStencilPitch=Pitch;
+
     Size=Pitch*VSize;
 
     //verify 64 bytes alignment for size of a frame buffer
@@ -3569,13 +3617,13 @@ int pb_init(void)
 
     pb_DSSize=Size;
 
-    //multiply size by number of physical frame buffers in order to obtain global size
-    DSSize=Size*FrameBufferCount;
+    // We use one shared depthbuffer
+    DSSize=Size; //FIXME: WTF?!
 
     //Huge alignment enforcement (16 Kb aligned!) for the global size
     DSSize=(DSSize+0x3FFF)&0xFFFFC000;
 
-    DSAddr=(DWORD)MmAllocateContiguousMemoryEx(FBSize,0,0x03FFB000,0x4000,0x404);
+    DSAddr=(DWORD)MmAllocateContiguousMemoryEx(DSSize,0,0x03FFB000,0x4000,0x404);
         //NumberOfBytes,LowestAcceptableAddress,HighestAcceptableAddress,Alignment OPTIONAL,ProtectionType
 
     pb_DepthStencilAddr=DSAddr;
@@ -3587,13 +3635,18 @@ int pb_init(void)
 
     pb_DSAddr=DSAddr;
 
+    DWORD tile_flags = 0x80000001;
+    if (pb_ZetaBpp == 32) {
+        tile_flags |= 0x4000000;
+    }
+
     pb_assign_tile( 1,              //int   tile_index,
             pb_DepthStencilAddr&0x03FFFFFF, //DWORD tile_addr,
             DSSize,             //DWORD tile_size,
             Pitch,              //DWORD tile_pitch,
             0,              //DWORD tile_z_start_tag,
             0,              //DWORD tile_z_offset,
-            0x84000001          //DWORD tile_flags (0x04000000 for 32 bits)
+            tile_flags          //DWORD tile_flags
             );
 
 
