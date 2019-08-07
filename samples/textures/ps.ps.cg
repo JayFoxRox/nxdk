@@ -1,0 +1,13 @@
+struct vOut {
+  float2 uv : TEXCOORD0;
+};
+
+float4 main(
+  vOut I,
+  uniform float4 color_scale,
+  uniform float4 color_bias,
+  uniform sampler2D texture
+) : COLOR
+{
+  return 0.5 + 0.5 * tex2D(texture, I.uv); //FIXME: * color_scale + color_bias;
+}

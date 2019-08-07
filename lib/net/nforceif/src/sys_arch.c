@@ -41,6 +41,7 @@
 #if !NO_SYS
 #include "xboxkrnl/xboxkrnl.h"
 #include <stdlib.h>
+#include <assert.h>
 
 static struct sys_sem *sys_sem_new_internal(u8_t count);
 static void sys_sem_free_internal(struct sys_sem *sem);
@@ -64,7 +65,6 @@ struct sys_mbox {
 };
 
 struct sys_sem {
-  unsigned int c;
   HANDLE handle;
 };
 
@@ -107,6 +107,7 @@ sys_jiffies(void)
 sys_thread_t
 sys_thread_new(const char *name, lwip_thread_fn function, void *arg, int stacksize, int prio)
 {
+//debugPrint("%s\n", __FUNCTION__);
   struct sys_thread *st = NULL;
   LWIP_UNUSED_ARG(name);
   LWIP_UNUSED_ARG(stacksize);
@@ -126,6 +127,7 @@ sys_thread_new(const char *name, lwip_thread_fn function, void *arg, int stacksi
 err_t
 sys_mbox_new(struct sys_mbox **mb, int size)
 {
+//debugPrint("%s\n", __FUNCTION__);
   struct sys_mbox *mbox;
   LWIP_UNUSED_ARG(size);
 
@@ -147,6 +149,7 @@ sys_mbox_new(struct sys_mbox **mb, int size)
 void
 sys_mbox_free(struct sys_mbox **mb)
 {
+//debugPrint("%s\n", __FUNCTION__);
   if ((mb != NULL) && (*mb != SYS_MBOX_NULL)) {
     struct sys_mbox *mbox = *mb;
     SYS_STATS_DEC(mbox.used);
@@ -164,6 +167,7 @@ sys_mbox_free(struct sys_mbox **mb)
 err_t
 sys_mbox_trypost(struct sys_mbox **mb, void *msg)
 {
+//debugPrint("%s\n", __FUNCTION__);
   u8_t first;
   struct sys_mbox *mbox;
   LWIP_ASSERT("invalid mbox", (mb != NULL) && (*mb != NULL));
@@ -201,6 +205,7 @@ sys_mbox_trypost(struct sys_mbox **mb, void *msg)
 void
 sys_mbox_post(struct sys_mbox **mb, void *msg)
 {
+//debugPrint("%s\n", __FUNCTION__);
   u8_t first;
   struct sys_mbox *mbox;
   LWIP_ASSERT("invalid mbox", (mb != NULL) && (*mb != NULL));
@@ -238,6 +243,7 @@ sys_mbox_post(struct sys_mbox **mb, void *msg)
 u32_t
 sys_arch_mbox_tryfetch(struct sys_mbox **mb, void **msg)
 {
+//debugPrint("%s\n", __FUNCTION__);
   struct sys_mbox *mbox;
   LWIP_ASSERT("invalid mbox", (mb != NULL) && (*mb != NULL));
   mbox = *mb;
@@ -271,6 +277,7 @@ sys_arch_mbox_tryfetch(struct sys_mbox **mb, void **msg)
 u32_t
 sys_arch_mbox_fetch(struct sys_mbox **mb, void **msg, u32_t timeout)
 {
+//debugPrint("%s\n", __FUNCTION__);
   u32_t time_needed = 0;
   struct sys_mbox *mbox;
   LWIP_ASSERT("invalid mbox", (mb != NULL) && (*mb != NULL));
@@ -320,13 +327,15 @@ sys_arch_mbox_fetch(struct sys_mbox **mb, void **msg, u32_t timeout)
 static struct sys_sem *
 sys_sem_new_internal(u8_t count)
 {
+debugPrint("%s\n", __FUNCTION__);
   struct sys_sem *sem;
 
   sem = (struct sys_sem *)malloc(sizeof(struct sys_sem));
   if (sem != NULL) {
-    sem->c = count;
-    NtCreateSemaphore(&(sem->handle), NULL, 1, 1);
+    assert((count == 0) || (count == 1));
+    NtCreateSemaphore(&(sem->handle), NULL, count, 1);
   }
+debugPrint("%s PTR %p HANDLE: %p\n", __FUNCTION__, sem, sem->handle);
   return sem;
 }
 
@@ -338,72 +347,71 @@ sys_sem_new(struct sys_sem **sem, u8_t count)
   if (*sem == NULL) {
     return ERR_MEM;
   }
+
   return ERR_OK;
 }
 
 u32_t
 sys_arch_sem_wait(struct sys_sem **s, u32_t timeout)
 {
+debugPrint("%s\n", __FUNCTION__);
   u32_t start, time_needed = 0;
   struct sys_sem *sem;
   LWIP_ASSERT("invalid sem", (s != NULL) && (*s != NULL));
   sem = *s;
-  int done;
 
   start = sys_now();
 
-  for (done=0; !done; )
-  {
-    NtWaitForSingleObject(sem->handle, FALSE, NULL);
-
-    if (sem->c > 0)
-    {
-      sem->c -= 1;
-      done = 1;
+  //FIXME: Use u64 / quad logic
+  LARGE_INTEGER nt_timeout;
+  nt_timeout.QuadPart = (LONGLONG)timeout * 10000LL; // ms -> 100ns
+  NTSTATUS status = NtWaitForSingleObject(sem->handle, FALSE, timeout > 0 ? &nt_timeout : NULL);
+  if (timeout > 0) {
+    if (status == STATUS_TIMEOUT) {
+      return SYS_ARCH_TIMEOUT;
     }
-
-    NtReleaseSemaphore(sem->handle, 1, NULL);
-
-    if (timeout > 0)
-    {
-      time_needed = sys_now()-start;
-      if (time_needed >= timeout) return SYS_ARCH_TIMEOUT;
-    }
+    time_needed = sys_now()-start;
   }
-
+  assert(status == STATUS_SUCCESS);
   return (u32_t)time_needed;
 }
 
 void
 sys_sem_signal(struct sys_sem **s)
 {
+debugPrint("%s 1\n", __FUNCTION__);
   struct sys_sem *sem;
   LWIP_ASSERT("invalid sem", (s != NULL) && (*s != NULL));
   sem = *s;
+debugPrint("%s 2\n", __FUNCTION__);
 
-  NtWaitForSingleObject(sem->handle, FALSE, NULL);
-  sem->c++;
+debugPrint("%s PTR %p HANDLE: %p\n", __FUNCTION__, sem, sem->handle);
 
-  if (sem->c > 1) {
-    sem->c = 1;
-  }
+debugPrint("%s 3\n", __FUNCTION__);
 
+debugPrint("%s 4\n", __FUNCTION__);
   NtReleaseSemaphore(sem->handle, 1, NULL);
+debugPrint("%s 5\n", __FUNCTION__);
 }
 
 static void
 sys_sem_free_internal(struct sys_sem *sem)
 {
+debugPrint("%s\n", __FUNCTION__);
+debugPrint("%s PTR %p HANDLE: %p\n", __FUNCTION__, sem, sem->handle);
+#if 0
   NTSTATUS status = NtClose((void*)sem->handle);
   if (!NT_SUCCESS(status)) {
       abort();
   }
   free(sem);
+#endif
 }
 
 void
 sys_sem_free(struct sys_sem **sem)
 {
+debugPrint("%s\n", __FUNCTION__);
   if ((sem != NULL) && (*sem != SYS_SEM_NULL)) {
     SYS_STATS_DEC(sem.used);
     sys_sem_free_internal(*sem);
