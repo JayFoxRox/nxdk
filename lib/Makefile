@@ -29,3 +29,4 @@ SRCS += \
 	$(USB_SRCS)
 
 include $(NXDK_DIR)/lib/xboxrt/Makefile
+include $(NXDK_DIR)/lib/bsd_usb/Makefile
