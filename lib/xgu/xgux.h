@@ -80,12 +80,37 @@ void xgux_set_clear_rect(unsigned int x, unsigned int y,
 }
 
 inline
-void xgux_set_attrib_pointer(XguVertexArray index, XguVertexArrayType format, unsigned int size, unsigned int stride, const void* data)
-{
+void xgux_set_attrib_pointer(XguVertexArray index, XguVertexArrayType format, unsigned int size, unsigned int stride, const void* data) {
     uint32_t *p = pb_begin();
     p = xgu_set_vertex_data_array_format(p, index, format, size, stride);
     p = xgu_set_vertex_data_array_offset(p, index, (uint32_t)data & 0x03ffffff);
     pb_end(p);
+}
+
+
+inline
+void xgux_set_transform_constant_vec4(int location, unsigned int count, const XguVec4* v) {
+    uint32_t *p = pb_begin();
+    p = xgu_set_transform_constant_load(p, 96 + location);
+    p = xgu_set_transform_constant(p, v, count);
+    pb_end(p);
+}
+
+inline
+void xgux_set_transform_constant_matrix4x4(unsigned int location, unsigned int count, bool transpose, const XguMatrix4x4* m) {
+    for(unsigned int i = 0; i < count; i++) {
+        if (transpose) {
+            XguMatrix4x4 t;
+            for(unsigned int row = 0; row < 4; row++) {
+                for(unsigned int col = 0; col < 4; col++) {
+                    t.col[row].f[col] = m[i].col[col].f[row];
+                }
+            }
+            xgux_set_transform_constant_vec4(location + i*4, 4, &t.col);
+        } else {
+            xgux_set_transform_constant_vec4(location + i*4, 4, &m[i].col);
+        }
+    }
 }
 
 #endif

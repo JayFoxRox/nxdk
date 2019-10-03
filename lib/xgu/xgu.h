@@ -150,24 +150,29 @@ typedef enum {
 #define XGU_LIGHT_COUNT 8
 
 typedef union {
+    float f[3];
     struct {
         float x, y, z;
     };
     struct {
         float r, g, b;
     };
-    float f[3];
 } XguVec3;
 
 typedef union {
+    float f[4];
     struct {
         float x, y, z, w;
     };
     struct {
         float r, g, b, a;
     };
-    float f[4];
 } XguVec4;
+
+typedef union {
+  float f[4*4];
+  XguVec4 col[4];
+} XguMatrix4x4;
 
 
 /* ========================= *
