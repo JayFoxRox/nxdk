@@ -20,6 +20,9 @@
 #include "xgu_extra.h"
 #include "xgux_extra.h"
 
+//FIXME: Replace by glm or something?
+#include "../common/matrix.h"
+
 #define MAX_RAM 0x3ffb000
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
@@ -43,9 +46,6 @@ static const ColoredVertex verts[] = {
     {{ 1.0, -1.0,  1.0}, { 0.0,  0.0,  1.0}},
 };
 static ColoredVertex *alloc_vertices;
-
-//FIXME: Replace by glm or something?
-#include "matrix.h"
 
 /* Main program function */
 int main(void)
@@ -139,7 +139,7 @@ int main(void)
 #endif
         //FIXME: p = xgu_set_fog_enable(p, false);
         p = xgu_set_projection_matrix(p, identity4x4); //FIXME: Unused in XQEMU
-//        p = xgu_set_composite_matrix(p, m_viewport); //FIXME: Always used in XQEMU?
+        p = xgu_set_composite_matrix(p, m_viewport); //FIXME: Always used in XQEMU?
 
 //FIXME: Why do I have to transpose this?!
 //
@@ -166,7 +166,7 @@ int main(void)
 //       So why is one transposed and the other one isn't? They run the same MUL?
 
           
-        p = pb_push_transposed_matrix(p, NV097_SET_COMPOSITE_MATRIX, m_viewport);
+//        p = pb_push_transposed_matrix(p, NV097_SET_COMPOSITE_MATRIX, m_viewport);
 
 
         for(int i = 0; i < XGU_WEIGHT_COUNT; i++) {
