@@ -100,6 +100,7 @@ Sleep(100);
          * Check the intermediate file (*.inl) for the expected locations after
          * changing the code.
          */
+#if 0
         p = pb_begin();
 
         /* Set shader constants cursor at C0 */
@@ -109,6 +110,10 @@ Sleep(100);
         p = xgu_set_transform_constant(p, m_viewport, 4);
 
         pb_end(p);
+#else
+        xgux_set_transform_constant_matrix4x4(0, 1, false, m_viewport);
+        xgux_set_transform_constant_vec4(4, 1, &(XguVec4){ 1.0f });
+#endif
         p = pb_begin();
 
         /* Clear all attributes */
