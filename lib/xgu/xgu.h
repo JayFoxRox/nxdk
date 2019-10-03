@@ -381,12 +381,12 @@ DWORD* xgu_set_projection_matrix(DWORD* p, float m[4*4]) {
 
 inline
 DWORD* xgu_set_model_view_matrix(DWORD* p, uint32_t bone_index, float m[4*4]) {
-    return push_command_matrix4x4(p, NV097_SET_MODEL_VIEW_MATRIX + bone_index*4, m);
+    return push_command_matrix4x4(p, NV097_SET_MODEL_VIEW_MATRIX + bone_index*(4*4)*4, m);
 }
 
 inline
 DWORD* xgu_set_inverse_model_view_matrix(DWORD* p, uint32_t bone_index, float m[4*4]) {
-    return push_command_matrix4x4(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX + bone_index*4, m);
+    return push_command_matrix4x4(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX + bone_index*(4*4)*4, m);
 }
 
 inline
