@@ -61,7 +61,7 @@ void main(void)
         XReboot();
         return;
     }
-
+Sleep(100);
     pb_show_front_screen();
 
     /* Basic setup */
