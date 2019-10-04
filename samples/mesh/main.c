@@ -17,6 +17,8 @@
 #include <hal/debug.h>
 #include "math3d.h"
 
+#include <assert.h>
+
 static uint32_t *alloc_vertices;
 static uint32_t  num_vertices;
 static uint32_t  num_indices;
@@ -92,6 +94,8 @@ void main(void)
     init_shader();
     init_textures();
 
+//--assert(!40);
+
     alloc_vertices = MmAllocateContiguousMemoryEx(sizeof(vertices), 0, MAXRAM, 0, 0x404);
     memcpy(alloc_vertices, vertices, sizeof(vertices));
     num_vertices = sizeof(vertices)/sizeof(vertices[0]);
@@ -112,6 +116,8 @@ void main(void)
     /* Create viewport matrix, combine with projection */
     matrix_viewport(m_viewport, 0, 0, width, height, 0, 65536.0f);
     matrix_multiply(m_proj, m_proj, (float*)m_viewport);
+
+//--assert(!50);
 
     while(1) {
         pb_wait_for_vbl();
@@ -150,7 +156,7 @@ void main(void)
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_TX_ENABLE(0),0x4003ffc0); p+=2; //set stage 0 texture enable flags
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_TX_FILTER(0),0x04074000); p+=2; //set stage 0 texture filters (AA!)
         pb_end(p);
-
+//--assert(!4);
         /* Disable other texture stages */
         p=pb_begin();
         pb_push1(p,NV20_TCL_PRIMITIVE_3D_TX_ENABLE(1),0x0003ffc0); p+=2;//set stage 1 texture enable flags (bit30 disabled)
@@ -171,7 +177,7 @@ void main(void)
          * changing the code.
          */
         p = pb_begin();
-
+//--assert(!5);
         /* Set shader constants cursor at C0 */
         pb_push1(p, NV20_TCL_PRIMITIVE_3D_VP_UPLOAD_CONST_ID, 96); p+=2;
 
@@ -207,7 +213,7 @@ void main(void)
         float constants_0[4] = {0, 2, 64, 1};
         pb_push(p++, NV20_TCL_PRIMITIVE_3D_VP_UPLOAD_CONST_X, 4);
         memcpy(p, constants_0, 4*4); p+=4;
-
+//--assert(!6);
         /* Clear all attributes */
         pb_push(p++,NV097_SET_VERTEX_DATA_ARRAY_FORMAT,16);
         for(i = 0; i < 16; i++) {
@@ -230,10 +236,10 @@ void main(void)
         /* Set texture coordinate attribute */
         set_attrib_pointer(8, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
                            2, sizeof(Vertex), &alloc_vertices[6]);
-
+//--assert(!7);
         /* Begin drawing triangles */
         draw_indices();
-
+//--assert(!8);
         /* Draw some text on the screen */
         pb_print("Mesh Demo\n");
         pb_print("Frames: %d\n", frames_total);
@@ -250,7 +256,7 @@ void main(void)
         while (pb_finished()) {
             /* Not ready to swap yet */
         }
-
+//--assert(!9);
         frames++;
         frames_total++;
 
@@ -315,7 +321,7 @@ static void init_shader(void)
     pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_LOAD, 0);
     p += 2;
     pb_end(p);
-
+////--assert(!1);
     /* Copy program instructions (16-bytes each) */
     for (i=0; i<sizeof(vs_program)/16; i++) {
         p = pb_begin();
@@ -324,11 +330,12 @@ static void init_shader(void)
         p+=4;
         pb_end(p);
     }
-
+////--assert(!2);
     /* Setup fragment shader */
     p = pb_begin();
     #include "ps.inl"
     pb_end(p);
+//--assert(!3);
 }
 
 /* Load the textures we will render with */
