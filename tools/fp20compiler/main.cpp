@@ -47,6 +47,9 @@ void translate(const char* s) {
 
         ts10_init(ts_start);
         ts10_parse();
+        for(int i = 0; i < errors.get_num_errors(); i++) {
+            fprintf(stderr, "error: %s\n", errors.get_errors()[i]);
+        }
 
         *ts_end = '/';
     }
@@ -55,6 +58,9 @@ void translate(const char* s) {
     if (rc_start) {
         rc10_init(rc_start);
         rc10_parse();
+        for(int i = 0; i < errors.get_num_errors(); i++) {
+            fprintf(stderr, "error: %s\n", errors.get_errors()[i]);
+        }
     }
 
     free(ns);
