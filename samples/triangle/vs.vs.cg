@@ -16,7 +16,8 @@ vOut main(
 	vOut   result;
 	float4 position;
 
-	position = mul(float4(I.position.xyz, 1.0f), m_viewport);
+	position = mul(m_viewport, I.position); // Works
+//	position = mul(m_viewport, float4(I.position.xyz, 1.0)); // Broken!!! WTF? why?!
 	position.xyz = position.xyz / position.w;
 
 	result.col = I.color;
