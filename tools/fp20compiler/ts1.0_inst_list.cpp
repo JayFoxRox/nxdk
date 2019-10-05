@@ -79,7 +79,7 @@ void InstList::Invoke()
             op = "PASS_THROUGH";
             break;
         default:
-            assert(false);
+            //assert(false);
             break;
         }
         if (i != 0) printf("    | ");
