@@ -21,20 +21,20 @@ static float     m_viewport[4][4];
 
 typedef struct {
     float pos[3];
-    float color[3];
+    float color[4];
 } __attribute__((packed)) ColoredVertex;
 
 static const ColoredVertex verts[] = {
-    //  X     Y     Z       R     G     B
-    {{-1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6}}, /* Background triangle 1 */
-    {{-1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0}},
-    {{ 1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0}},
-    {{-1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6}}, /* Background triangle 2 */
-    {{ 1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0}},
-    {{ 1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6}},
-    {{-1.0, -1.0,  1.0}, { 1.0,  0.0,  0.0}}, /* Foreground triangle */
-    {{ 0.0,  1.0,  1.0}, { 0.0,  1.0,  0.0}},
-    {{ 1.0, -1.0,  1.0}, { 0.0,  0.0,  1.0}},
+    //  X     Y     Z       R     G     B    A
+    {{-1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6, 1.0}}, /* Background triangle 1 */
+    {{-1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0, 1.0}},
+    {{ 1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0, 1.0}},
+    {{-1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6, 1.0}}, /* Background triangle 2 */
+    {{ 1.0,  1.0,  1.0}, { 0.0,  0.0,  0.0, 1.0}},
+    {{ 1.0, -1.0,  1.0}, { 0.1,  0.1,  0.6, 1.0}},
+    {{-1.0, -1.0,  1.0}, { 1.0,  0.0,  0.0, 0.5}}, /* Foreground triangle */
+    {{ 0.0,  1.0,  1.0}, { 0.0,  1.0,  0.0, 0.1}},
+    {{ 1.0, -1.0,  1.0}, { 0.0,  0.0,  1.0, 0.5}},
 };
 
 #define MASK(mask, val) (((val) << (ffs(mask)-1)) & (mask))
@@ -62,6 +62,9 @@ void main(void)
         return;
     }
 
+    /* Hack for XQEMU - although XQEMU might be buggy in GPU */
+    Sleep(100);
+
     pb_show_front_screen();
 
     /* Basic setup */
@@ -86,7 +89,7 @@ void main(void)
 
         /* Clear depth & stencil buffers */
         pb_erase_depth_stencil_buffer(0, 0, width, height);
-        pb_fill(0, 0, width, height, 0x00000000);
+        pb_fill(0, 0, width, height, 0x00FF00FF);
         pb_erase_text_screen();
 
         while(pb_busy()) {
@@ -124,7 +127,14 @@ void main(void)
 
         /* Set vertex diffuse color attribute */
         set_attrib_pointer(3, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-                           3, sizeof(ColoredVertex), &alloc_vertices[3]);
+                           4, sizeof(ColoredVertex), &alloc_vertices[3]);
+
+        /* Enable alpha blending */
+        p = pb_begin();
+        pb_push1(p,NV20_TCL_PRIMITIVE_3D_BLEND_FUNC_ENABLE,1); p+=2;
+        pb_push1(p,NV20_TCL_PRIMITIVE_3D_BLEND_FUNC_SRC,0x0302); p+=2; //src alpha
+        pb_push1(p,NV20_TCL_PRIMITIVE_3D_BLEND_FUNC_DST,0x0303); p+=2; //one minus src alpha
+        pb_end(p);
 
         /* Begin drawing triangles */
         draw_arrays(NV097_SET_BEGIN_END_OP_TRIANGLES, 0, num_vertices);
