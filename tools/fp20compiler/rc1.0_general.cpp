@@ -306,6 +306,17 @@ void GeneralFunctionStruct::Invoke(int stage, int portion, BiasScaleEnum bs)
         printf("    | MASK(NV097_SET_COMBINER_%s_OCW_CD_DOT_ENABLE, %d)\n", portion_s, op[1].op);
     }
 
+    if (portion == RCP_RGB) {
+        //FIXME: Avoid re-use of register in alpha portion?
+        if (op[0].reg[0].reg.bits.channel == RCP_ALPHA) {
+            printf("\n\nBLUETOALPHA_AB\n\n\n");
+        }
+        if (op[1].reg[0].reg.bits.channel == RCP_ALPHA) {
+            printf("\n\nBLUETOALPHA_CD\n\n\n");
+        }
+        assert(op[2].reg[0].reg.bits.channel == RCP_RGB);
+    }
+
     printf("    | MASK(NV097_SET_COMBINER_%s_OCW_OP, NV097_SET_COMBINER_%s_OCW_OP_%s%s)",
             portion_s, portion_s, scale_s,
             (bs.bits.bias == BIAS_BY_NEGATIVE_ONE_HALF) ? "_BIAS" : "");
