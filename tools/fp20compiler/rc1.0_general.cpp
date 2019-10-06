@@ -11,13 +11,13 @@ void GeneralCombinersStruct::Validate(int numConsts, ConstColorStruct *pcc)
 {
     // GLint maxGCs;
     // glGetIntegerv(GL_MAX_GENERAL_COMBINERS_NV, &maxGCs);
-    // if (num > maxGCs) {
-    //     char buffer[256];
-    //     sprintf(buffer, "%d general combiners specified, only %d supported", num, (int)maxGCs);
-    //     errors.set(buffer);
-    //     num = maxGCs;
-    // }
     int maxGCs = 8;
+    if (num > maxGCs) {
+        char buffer[256];
+        sprintf(buffer, "%d general combiners specified, only %d supported", num, (int)maxGCs);
+        errors.set(buffer);
+        num = maxGCs;
+    }
 
     if (0 == num) {
         // Setup a "fake" general combiner 0
