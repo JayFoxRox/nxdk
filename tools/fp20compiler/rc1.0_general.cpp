@@ -375,6 +375,13 @@ void OpStruct::Validate(int stage, int portion)
         if (RCP_ALPHA == portion &&
             RCP_RGB == reg[i].reg.bits.channel)
             errors.set("rgb register used in alpha portion");
+        if (i == 0 &&
+            RCP_RGB == portion &&
+            RCP_ALPHA == reg[i].reg.bits.channel)
+            errors.set("alpha register used as output in rgb portion");
+        if (i == 0 &&
+            RCP_BLUE == reg[i].reg.bits.channel)
+            errors.set("blue register used as output");
         if (i > 0 &&
             REG_DISCARD == reg[i].reg.bits.name)
             errors.set("reading from discard");
