@@ -1,0 +1,27 @@
+//Foo
+!!TS1.0
+//texture_2d();
+//dot_product_2d_1of2(tex0);
+//dot_product_2d_2of2(tex0);
+
+
+// End of program
+
+
+!!RC1.0
+
+{
+  rgb {
+    spare0.a = col0.rgb * col1.rgb;
+    discard = col0.rgb * col1.rgb;
+    spare1 = sum();
+  }
+  alpha {
+    spare0 = col0.a;
+  }
+}
+
+out.rgb = spare0.rgb;
+out.a = spare0.a;
+
+// End of program
