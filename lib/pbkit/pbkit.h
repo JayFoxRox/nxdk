@@ -53,8 +53,6 @@ extern "C"
 #define SUBCH_3                 3
 #define SUBCH_4                 4
 
-//fastest way to write a method for subchannel 3D (0)
-#define pb_push(p,command,nparam)       *(p)=((nparam<<18)+command)
 
 void    pb_show_front_screen(void); //shows scene (allows VBL synced screen swapping)
 void    pb_show_debug_screen(void); //shows debug screen (default openxdk+SDL buffer)
@@ -78,16 +76,19 @@ void pb_wait_until_gr_not_busy(void);
 DWORD pb_wait_until_tiles_not_busy(void);
 
 DWORD   *pb_begin(void);    //start a block with this (avoid more than 128 dwords per block)
-void    pb_push1to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1); //slow functions but with debug messages
-void    pb_push2to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2);
-void    pb_push3to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
-void    pb_push4to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
-void    pb_push1(DWORD *p, DWORD command, DWORD param1); //slow functions but with debug messages (targets SUBCH_3D (0))
-void    pb_push2(DWORD *p, DWORD command, DWORD param1, DWORD param2);
-void    pb_push3(DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
-void    pb_push4(DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
-void    pb_push4f(DWORD *p, DWORD command, float param1, float param2, float param3, float param4);
-void    pb_push_transposed_matrix(DWORD *p, DWORD command, float *m);
+inline DWORD   *pb_push_to(DWORD subchannel, DWORD *p, DWORD command, DWORD nparam);
+inline DWORD   *pb_push1_to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1);
+inline DWORD   *pb_push2_to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2);
+inline DWORD   *pb_push3_to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
+inline DWORD   *pb_push4_to(DWORD subchannel, DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
+inline DWORD   *pb_push4f_to(DWORD subchannel, DWORD *p, DWORD command, float param1, float param2, float param3, float param4);
+inline DWORD   *pb_push(DWORD *p, DWORD command, DWORD nparam);
+inline DWORD   *pb_push1(DWORD *p, DWORD command, DWORD param1);
+inline DWORD   *pb_push2(DWORD *p, DWORD command, DWORD param1, DWORD param2);
+inline DWORD   *pb_push3(DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
+inline DWORD   *pb_push4(DWORD *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
+inline DWORD   *pb_push4f(DWORD *p, DWORD command, float param1, float param2, float param3, float param4);
+inline DWORD   *pb_push_transposed_matrix(DWORD *p, DWORD command, float *m);
 void    pb_end(DWORD *pEnd);    //end a block with this (triggers the data sending to GPU)
 
 void    pb_extra_buffers(int n);//requests additional back buffers (default is 0) (call it before pb_init)
@@ -110,9 +111,9 @@ DWORD   pb_back_buffer_width(void);
 DWORD   pb_back_buffer_height(void);
 DWORD   pb_back_buffer_pitch(void);
 
-void    pb_fill(int x,int y,int w,int h, DWORD color);  //rectangle fill
+void    pb_fill(int x,int y,int w,int h, DWORD color) __attribute__ ((deprecated));  //rectangle fill
 
-void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zmax);
+void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zmax) __attribute__ ((deprecated));
 
 int pb_busy(void);
 
