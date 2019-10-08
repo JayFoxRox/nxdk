@@ -1,0 +1,5 @@
+!!RC1.0
+
+const1 = (0.0, 0.5, 0.0, 0.0); // dark green
+out.rgb = const1.rgb;
+out.a = const1.a;
