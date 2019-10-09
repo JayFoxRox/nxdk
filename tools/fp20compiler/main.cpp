@@ -51,6 +51,10 @@ static char* find_at_line_start(char* haystack, char* cursor, const char* needle
 void translate(const char* s) {
     char* ns = strdup(s);
 
+    // Keep a cursor for line-counting
+    char* line_cursor = ns;
+    unsigned int line = 1;
+
     // Look for the first shader magic
     char* shader_start = find_at_line_start(ns, ns, "!!");
 
@@ -73,6 +77,22 @@ void translate(const char* s) {
             next_shader_start = find_at_line_start(ns, line_end + 1, "!!");
         }
 
+        // Create a copy of the current shader magic
+        if (line_end) { *line_end = '\0'; }
+        char* shader_magic = strdup(shader_start);
+        if (line_end) { *line_end = '\n'; }
+
+        // Count which line the current shader starts on
+        while (line_cursor < shader_start) {
+            line_cursor = strchr(line_cursor, '\n');
+            assert(line_cursor != NULL);
+            line_cursor++;
+            line++;
+        }
+
+        // Add information about shader section to output
+        printf("/* %s (line %u) */\n", shader_magic, line);
+
         // If another shader exists, modify it to end current shader string
         if (next_shader_start) { *next_shader_start = '\0'; }
 
@@ -84,13 +104,14 @@ void translate(const char* s) {
             rc10_init(shader_start);
             rc10_parse();
         } else {
-            if (line_end) { *line_end = '\0'; }
-            fprintf(stderr, "unknown shader type \"%s\"\n", shader_start);
-            if (line_end) { *line_end = '\n'; }
+            fprintf(stderr, "unknown shader type \"%s\"\n", shader_magic);
         }
 
         // Recover next magic (was modified to mark end of current shader)
         if (next_shader_start) { *next_shader_start = '!'; }
+
+        // Free the copy of the current shader magic
+        free(shader_magic);
 
 
         // Continue with next shader
