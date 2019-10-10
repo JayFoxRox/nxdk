@@ -186,7 +186,7 @@ static void init_shader(void)
 
     /* Setup vertex shader */
     uint32_t vs_program[] = {
-        #include "vs.inl"
+        #include "simple.vs.inl"
     };
 
     p = pb_begin();
@@ -223,7 +223,7 @@ static void init_shader(void)
 
     /* Setup fragment shader */
     p = pb_begin();
-    #include "ps.inl"
+    #include "simple.ps.inl"
     pb_end(p);
 }
 
