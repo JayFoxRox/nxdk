@@ -64,7 +64,7 @@ static void draw_arrays(unsigned int mode, int start, int count);
 static void draw_indices(void);
 
 /* Main program function */
-void main(void)
+int main(void)
 {
     uint32_t *p;
     int       i, status;
@@ -79,7 +79,7 @@ void main(void)
         debugPrint("pb_init Error %d\n", status);
         Sleep(2000);
         XReboot();
-        return;
+        return 1;
     }
 
     pb_show_front_screen();
@@ -113,7 +113,7 @@ void main(void)
     matrix_viewport(m_viewport, 0, 0, width, height, 0, 65536.0f);
     matrix_multiply(m_proj, m_proj, (float*)m_viewport);
 
-    while(1) {
+    while((now - start) <= 1000) {
         pb_wait_for_vbl();
         pb_reset();
         pb_target_back_buffer();
@@ -267,7 +267,7 @@ void main(void)
     MmFreeContiguousMemory(alloc_vertices);
     pb_show_debug_screen();
     pb_kill();
-    XReboot();
+    return 0;
 }
 
 /* Construct a viewport transformation matrix */

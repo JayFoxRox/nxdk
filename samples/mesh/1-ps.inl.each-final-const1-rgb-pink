@@ -1,0 +1,10 @@
+!!RC1.0
+
+const1 = (1.0, 0.0, 1.0, 0.0); // pink
+{
+  const1 = (0.0, 0.0, 0.0, 0.0); // black (ignored)
+  rgb   { spare0 = const1; }
+  alpha { spare0 = const1; }
+}
+out.rgb = const1.rgb;
+out.a = const1.a;

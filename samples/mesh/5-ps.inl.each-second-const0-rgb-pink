@@ -1,0 +1,15 @@
+!!RC1.0
+
+const0 = (0.0, 0.0, 0.0, 0.0); // black (ignored)
+{
+  const0 = (0.5, 0.5, 0.5, 0.5); // gray (ignored)
+  rgb   { spare0 = const0; }
+  alpha { spare0 = const0; }
+}
+{
+  const0 = (1.0, 0.0, 1.0, 0.0); // pink
+  rgb   { spare0 = const0; }
+  alpha { spare0 = const0; }
+}
+out.rgb = spare0.rgb;
+out.a = spare0.a;
