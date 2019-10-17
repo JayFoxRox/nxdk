@@ -84,6 +84,11 @@ int main(int argc, char** argv) {
     fread(buffer, size, 1, fh);
     buffer[size] = '\0';
 
+    if (strchr(buffer, '\r') != NULL) {
+        fprintf(stderr, "found unsupported line-endings\n");
+        exit(1);
+    }
+
     translate(buffer);
 
     fclose(fh);
