@@ -103,7 +103,7 @@ void GeneralCombinerStruct::Validate(int stage)
 {
     if (2 == numConsts &&
         cc[0].reg.bits.name == cc[1].reg.bits.name)
-        errors.set("local constant set twice");
+        errors.set("local constant set twice", cc[1].line_number);
 
     switch (numPortions)
     {
