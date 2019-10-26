@@ -74,7 +74,7 @@ public:
     { portion[0] = _portion0; numPortions = 1; numConsts = 0; }
 
     void Validate(int stage);
-    void SetUnusedLocalConsts(int numGlobalConsts, ConstColorStruct *globalCCs);
+    void SetUnusedLocalConsts(int name, int numGlobalConsts, ConstColorStruct *globalCCs);
     void Invoke(int stage);
     void ZeroOut();
     GeneralPortionStruct portion[2];
@@ -99,7 +99,7 @@ public:
     void Invoke();
     GeneralCombinerStruct general[RCP_NUM_GENERAL_COMBINERS];
     int num;
-    int localConsts;
+    int localConsts[2];
 };
 
 
