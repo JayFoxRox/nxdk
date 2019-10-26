@@ -102,8 +102,10 @@ void GeneralCombinerStruct::SetUnusedLocalConsts(int numGlobalConsts, ConstColor
 void GeneralCombinerStruct::Validate(int stage)
 {
     if (2 == numConsts &&
-        cc[0].reg.bits.name == cc[1].reg.bits.name)
+        cc[0].reg.bits.name == cc[1].reg.bits.name) {
         errors.set("local constant set twice");
+        numConsts--;
+    }
 
     switch (numPortions)
     {
