@@ -32,6 +32,7 @@ int yylex ( void );
   FinalRgbFunctionStruct finalRgbFunctionStruct;
   FinalAlphaFunctionStruct finalAlphaFunctionStruct;
   FinalCombinerStruct finalCombinerStruct;
+  ColoredFinalCombinerStruct coloredFinalCombinerStruct;
   CombinersStruct combinersStruct;
 }
 
@@ -66,6 +67,7 @@ int yylex ( void );
 %type <finalRgbFunctionStruct> FinalRgbFunction
 %type <finalAlphaFunctionStruct> FinalAlphaFunction
 %type <finalCombinerStruct> FinalCombiner
+%type <coloredFinalCombinerStruct> ColoredFinalCombiner
 
 %%
 
@@ -76,41 +78,25 @@ WholeEnchilada	: Combiners
 		}
 		;
 
-Combiners : ConstColor GeneralCombiners FinalCombiner
+Combiners : ConstColor GeneralCombiners ColoredFinalCombiner
 		{
 			CombinersStruct combinersStruct;
 			combinersStruct.Init($2, $3, $1);
 			$$ = combinersStruct;
 		}
-		| ConstColor ConstColor GeneralCombiners FinalCombiner
+		| ConstColor ConstColor GeneralCombiners ColoredFinalCombiner
 		{
 			CombinersStruct combinersStruct;
 			combinersStruct.Init($3, $4, $1, $2);
 			$$ = combinersStruct;
 		}
-		| GeneralCombiners FinalCombiner
+		| GeneralCombiners ColoredFinalCombiner
 		{
 			CombinersStruct combinersStruct;
 			combinersStruct.Init($1, $2);
 			$$ = combinersStruct;
 		}
-		| ConstColor FinalCombiner
-		{
-			GeneralCombinersStruct generalCombinersStruct;
-			generalCombinersStruct.Init();
-			CombinersStruct combinersStruct;
-			combinersStruct.Init(generalCombinersStruct, $2, $1);
-			$$ = combinersStruct;
-		}
-		| ConstColor ConstColor FinalCombiner
-		{
-			GeneralCombinersStruct generalCombinersStruct;
-			generalCombinersStruct.Init();
-			CombinersStruct combinersStruct;
-			combinersStruct.Init(generalCombinersStruct, $3, $1, $2);
-			$$ = combinersStruct;
-		}
-		| FinalCombiner
+		| ColoredFinalCombiner
 		{
 			GeneralCombinersStruct generalCombinersStruct;
 			generalCombinersStruct.Init();
@@ -568,6 +554,26 @@ FinalCombiner : FinalAlphaFunction FinalRgbFunction
 			finalRgbFunctionStruct.ZeroOut();
 			finalCombinerStruct.Init(finalRgbFunctionStruct, $3, true, $1);
 			$$ = finalCombinerStruct;
+		}
+		;
+
+ColoredFinalCombiner	: ConstColor ConstColor FinalCombiner
+		{
+			ColoredFinalCombinerStruct coloredFinalCombinerStruct;
+			coloredFinalCombinerStruct.Init($3, $1, $2);
+			$$ = coloredFinalCombinerStruct;
+		}
+		| ConstColor FinalCombiner
+		{
+			ColoredFinalCombinerStruct coloredFinalCombinerStruct;
+			coloredFinalCombinerStruct.Init($2, $1);
+			$$ = coloredFinalCombinerStruct;
+		}
+		| FinalCombiner
+		{
+			ColoredFinalCombinerStruct coloredFinalCombinerStruct;
+			coloredFinalCombinerStruct.Init($1);
+			$$ = coloredFinalCombinerStruct;
 		}
 		;
 

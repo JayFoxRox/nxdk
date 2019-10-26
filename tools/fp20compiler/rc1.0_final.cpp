@@ -195,3 +195,63 @@ void FinalCombinerStruct::Invoke()
     //     MAP_CHANNEL(alpha.g.reg.bits.channel));
     // assert(false);
 }
+
+void ColoredFinalCombinerStruct::Invoke()
+{
+
+    // This is an Xbox specific extension.
+    // NV2A can have separate colors in final-combiner and general-combiner.
+    assert(numConsts <= 2);
+    for (int i = 0; i < numConsts; i++) {
+        const char* cmd = NULL;
+        switch(cc[i].reg.bits.name) {
+        case REG_CONSTANT_COLOR0:
+            cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 0";
+            break;
+        case REG_CONSTANT_COLOR1:
+            cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 4";
+            break;
+        default:
+            assert(false);
+            break;
+        }
+
+        assert(cc[i].v[0] >= 0.0f && cc[i].v[0] <= 1.0f);
+        assert(cc[i].v[1] >= 0.0f && cc[i].v[1] <= 1.0f);
+        assert(cc[i].v[2] >= 0.0f && cc[i].v[2] <= 1.0f);
+        assert(cc[i].v[3] >= 0.0f && cc[i].v[3] <= 1.0f);
+
+        printf("pb_push1(p, %s,", cmd);
+        printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
+        printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
+        printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
+        printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc[i].v[2] * 0xFF));
+        printf(");\n");
+        printf("p += 2;\n");
+    }
+
+
+    final.Invoke();
+}
+
+void ColoredFinalCombinerStruct::Validate(int numGlobalConsts, ConstColorStruct *globalCCs)
+{
+    if (2 == numConsts &&
+        cc[0].reg.bits.name == cc[1].reg.bits.name) {
+        errors.set("constant set twice");
+        numConsts--;
+    }
+
+    // Stolen from `GeneralCombinerStruct::SetUnusedLocalConsts`
+    int i;
+    for (i = 0; i < numGlobalConsts; i++) {
+        bool constUsed = false;
+        int j;
+        for (j = 0; j < numConsts; j++)
+            constUsed |= (cc[j].reg.bits.name == globalCCs[i].reg.bits.name);
+        if (!constUsed)
+            cc[numConsts++] = globalCCs[i];
+    }
+
+    final.Validate();
+}

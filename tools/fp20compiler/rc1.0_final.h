@@ -1,6 +1,7 @@
 #ifndef _RC10_FINAL_H
 #define _RC10_FINAL_H
 
+#include "rc1.0_general.h"
 #include "rc1.0_register.h"
 
 class FinalAlphaFunctionStruct {
@@ -42,6 +43,22 @@ public:
     FinalRgbFunctionStruct rgb;
     FinalAlphaFunctionStruct alpha;
     void Validate();
+    void Invoke();
+};
+
+class ColoredFinalCombinerStruct {
+public:
+    void Init(FinalCombinerStruct _final, ConstColorStruct _cc0, ConstColorStruct _cc1)
+    { final = _final; cc[0] = _cc0; cc[1] = _cc1; numConsts = 2; }
+    void Init(FinalCombinerStruct _final, ConstColorStruct _cc0)
+    { final = _final; cc[0] = _cc0; numConsts = 1; }
+    void Init(FinalCombinerStruct _final)
+    { final = _final; numConsts = 0; }
+
+    FinalCombinerStruct final;
+    ConstColorStruct cc[2];
+    int numConsts;
+    void Validate(int numGlobalConsts, ConstColorStruct *globalCCs);
     void Invoke();
 };
 

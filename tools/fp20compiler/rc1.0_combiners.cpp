@@ -18,7 +18,7 @@ void CombinersStruct::Validate()
 
     generals.Validate(numConsts, &cc[0]);
 
-    final.Validate();
+    final.Validate(numConsts, &cc[0]);
 }
 
 void CombinersStruct::Invoke()
@@ -26,16 +26,13 @@ void CombinersStruct::Invoke()
     assert(numConsts <= 2);
     for (int i = 0; i < numConsts; i++) {
     //     glCombinerParameterfvNV(cc[i].reg.bits.name, &(cc[i].v[0]));
-        const char* general_cmd = NULL;
-        const char* final_cmd = NULL;
+        const char* cmd = NULL;
         switch(cc[i].reg.bits.name) {
         case REG_CONSTANT_COLOR0:
-            general_cmd = "NV097_SET_COMBINER_FACTOR0";
-            final_cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 0";
+            cmd = "NV097_SET_COMBINER_FACTOR0";
             break;
         case REG_CONSTANT_COLOR1:
-            general_cmd = "NV097_SET_COMBINER_FACTOR1";
-            final_cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 4";
+            cmd = "NV097_SET_COMBINER_FACTOR1";
             break;
         default:
             assert(false);
@@ -56,7 +53,7 @@ void CombinersStruct::Invoke()
         // Also see mode selection in GeneralCombinersStruct::Invoke() and
         // local-constant emitter in GeneralCombinerStruct::Invoke(int stage).
         if (generals.localConsts == 0) {
-            printf("pb_push1(p, %s,", general_cmd);
+            printf("pb_push1(p, %s,", cmd);
             printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
             printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
             printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
@@ -64,15 +61,6 @@ void CombinersStruct::Invoke()
             printf(");\n");
             printf("p += 2;\n");
         }
-
-        // Global-constants are also used in final-combiner
-        printf("pb_push1(p, %s,", final_cmd);
-        printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
-        printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
-        printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
-        printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc[i].v[2] * 0xFF));
-        printf(");\n");
-        printf("p += 2;\n");
     }
 
 
