@@ -78,18 +78,20 @@ WholeEnchilada	: Combiners
 		}
 		;
 
-Combiners : ConstColors GeneralCombiners FinalCombiner
+Combiners : ConstColors GeneralCombiners ConstColors FinalCombiner
 		{
 			CombinersStruct combinersStruct;
-			combinersStruct.Init($2, $3, $1);
+			combinersStruct.Init($2, $4, $1, $3);
 			$$ = combinersStruct;
 		}
 		| ConstColors FinalCombiner
 		{
+			ConstColorsStruct constColorsStruct;
+			constColorsStruct.Init();
 			GeneralCombinersStruct generalCombinersStruct;
 			generalCombinersStruct.Init();
 			CombinersStruct combinersStruct;
-			combinersStruct.Init(generalCombinersStruct, $2, $1);
+			combinersStruct.Init(generalCombinersStruct, $2, constColorsStruct, $1);
 			$$ = combinersStruct;
 		}
 		;
