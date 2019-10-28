@@ -23,6 +23,7 @@ int yylex ( void );
   BiasScaleEnum biasScaleEnum;
   MappedRegisterStruct mappedRegisterStruct;
   ConstColorStruct constColorStruct;
+  ConstColorsStruct constColorsStruct;
   GeneralPortionStruct generalPortionStruct;
   GeneralFunctionStruct generalFunctionStruct;
   OpStruct opStruct;
@@ -51,6 +52,7 @@ int yylex ( void );
 %type <combinersStruct> WholeEnchilada Combiners
 
 %type <constColorStruct> ConstColor
+%type <constColorsStruct> ConstColors
 %type <generalCombinerStruct> GeneralCombiner
 %type <generalCombinersStruct> GeneralCombiners
 %type <ival> PortionDesignator
@@ -76,46 +78,18 @@ WholeEnchilada	: Combiners
 		}
 		;
 
-Combiners : ConstColor GeneralCombiners FinalCombiner
+Combiners : ConstColors GeneralCombiners FinalCombiner
 		{
 			CombinersStruct combinersStruct;
 			combinersStruct.Init($2, $3, $1);
 			$$ = combinersStruct;
 		}
-		| ConstColor ConstColor GeneralCombiners FinalCombiner
-		{
-			CombinersStruct combinersStruct;
-			combinersStruct.Init($3, $4, $1, $2);
-			$$ = combinersStruct;
-		}
-		| GeneralCombiners FinalCombiner
-		{
-			CombinersStruct combinersStruct;
-			combinersStruct.Init($1, $2);
-			$$ = combinersStruct;
-		}
-		| ConstColor FinalCombiner
+		| ConstColors FinalCombiner
 		{
 			GeneralCombinersStruct generalCombinersStruct;
 			generalCombinersStruct.Init();
 			CombinersStruct combinersStruct;
 			combinersStruct.Init(generalCombinersStruct, $2, $1);
-			$$ = combinersStruct;
-		}
-		| ConstColor ConstColor FinalCombiner
-		{
-			GeneralCombinersStruct generalCombinersStruct;
-			generalCombinersStruct.Init();
-			CombinersStruct combinersStruct;
-			combinersStruct.Init(generalCombinersStruct, $3, $1, $2);
-			$$ = combinersStruct;
-		}
-		| FinalCombiner
-		{
-			GeneralCombinersStruct generalCombinersStruct;
-			generalCombinersStruct.Init();
-			CombinersStruct combinersStruct;
-			combinersStruct.Init(generalCombinersStruct, $1);
 			$$ = combinersStruct;
 		}
 		;
@@ -125,6 +99,27 @@ ConstColor : constVariable equals openParen floatValue comma floatValue comma fl
 			ConstColorStruct constColorStruct;
 			constColorStruct.Init($1, $4, $6, $8, $10);
 			$$ = constColorStruct;
+		}
+		;
+
+
+ConstColors : ConstColor ConstColor
+		{
+			ConstColorsStruct constColorsStruct;
+			constColorsStruct.Init($1, $2);
+			$$ = constColorsStruct;
+		}
+		| ConstColor
+		{
+			ConstColorsStruct constColorsStruct;
+			constColorsStruct.Init($1);
+			$$ = constColorsStruct;
+		}
+		| /* empty */
+		{
+			ConstColorsStruct constColorsStruct;
+			constColorsStruct.Init();
+			$$ = constColorsStruct;
 		}
 		;
  
@@ -142,40 +137,16 @@ GeneralCombiners	 : GeneralCombiners GeneralCombiner
 		}
 		;
  
-GeneralCombiner : openBracket GeneralPortion GeneralPortion closeBracket
-		{
-			GeneralCombinerStruct generalCombinerStruct;
-			generalCombinerStruct.Init($2, $3);
-			$$ = generalCombinerStruct;
-		}
-		| openBracket ConstColor GeneralPortion GeneralPortion closeBracket
+GeneralCombiner : openBracket ConstColors GeneralPortion GeneralPortion closeBracket
 		{
 			GeneralCombinerStruct generalCombinerStruct;
 			generalCombinerStruct.Init($3, $4, $2);
 			$$ = generalCombinerStruct;
 		}
-		| openBracket ConstColor ConstColor GeneralPortion GeneralPortion closeBracket
-		{
-			GeneralCombinerStruct generalCombinerStruct;
-			generalCombinerStruct.Init($4, $5, $2, $3);
-			$$ = generalCombinerStruct;
-		}
-		| openBracket GeneralPortion closeBracket
-		{
-			GeneralCombinerStruct generalCombinerStruct;
-			generalCombinerStruct.Init($2);
-			$$ = generalCombinerStruct;
-		}
-		| openBracket ConstColor GeneralPortion closeBracket
+		| openBracket ConstColors GeneralPortion closeBracket
 		{
 			GeneralCombinerStruct generalCombinerStruct;
 			generalCombinerStruct.Init($3, $2);
-			$$ = generalCombinerStruct;
-		}
-		| openBracket ConstColor ConstColor GeneralPortion closeBracket
-		{
-			GeneralCombinerStruct generalCombinerStruct;
-			generalCombinerStruct.Init($4, $2, $3);
 			$$ = generalCombinerStruct;
 		}
 		;

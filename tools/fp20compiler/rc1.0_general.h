@@ -21,6 +21,20 @@ public:
     float v[4];
 };
 
+class ConstColorsStruct {
+public:
+    void Init(ConstColorStruct _cc0, ConstColorStruct _cc1)
+    { cc[0] = _cc0; cc[1] = _cc1; numConsts = 2; }
+    void Init(ConstColorStruct _cc0)
+    { cc[0] = _cc0; numConsts = 1; }
+    void Init()
+    { numConsts = 0; }
+    void Validate();
+    void SetUnusedConsts(ConstColorsStruct *ccs);
+    ConstColorStruct cc[2];
+    int numConsts;
+};
+
 class OpStruct {
 public:
     void Init(int _op, RegisterEnum _reg0, MappedRegisterStruct _reg1, MappedRegisterStruct _reg2)
@@ -61,28 +75,18 @@ public:
 
 class GeneralCombinerStruct {
 public:
-    void Init(GeneralPortionStruct _portion0, GeneralPortionStruct _portion1, ConstColorStruct _cc0, ConstColorStruct _cc1)
-    { portion[0] = _portion0; portion[1] = _portion1; numPortions = 2; cc[0] = _cc0; cc[1] = _cc1; numConsts = 2; }
-    void Init(GeneralPortionStruct _portion0, GeneralPortionStruct _portion1, ConstColorStruct _cc0)
-    { portion[0] = _portion0; portion[1] = _portion1; numPortions = 2; cc[0] = _cc0; numConsts = 1; }
-    void Init(GeneralPortionStruct _portion0, GeneralPortionStruct _portion1)
-    { portion[0] = _portion0; portion[1] = _portion1; numPortions = 2; numConsts = 0; }
+    void Init(GeneralPortionStruct _portion0, GeneralPortionStruct _portion1, ConstColorsStruct _ccs)
+    { portion[0] = _portion0; portion[1] = _portion1; numPortions = 2; ccs = _ccs; }
 
-    void Init(GeneralPortionStruct _portion0, ConstColorStruct _cc0, ConstColorStruct _cc1)
-    { portion[0] = _portion0; numPortions = 1; cc[0] = _cc0; cc[1] = _cc1; numConsts = 2; }
-    void Init(GeneralPortionStruct _portion0, ConstColorStruct _cc0)
-    { portion[0] = _portion0; numPortions = 1; cc[0] = _cc0; numConsts = 1; }
-    void Init(GeneralPortionStruct _portion0)
-    { portion[0] = _portion0; numPortions = 1; numConsts = 0; }
+    void Init(GeneralPortionStruct _portion0, ConstColorsStruct _ccs)
+    { portion[0] = _portion0; numPortions = 1; ccs = _ccs; }
 
     void Validate(int stage);
-    void SetUnusedLocalConsts(int numGlobalConsts, ConstColorStruct *globalCCs);
     void Invoke(int stage);
     void ZeroOut();
     GeneralPortionStruct portion[2];
     int numPortions;
-    ConstColorStruct cc[2];
-    int numConsts;
+    ConstColorsStruct ccs;
 };
 
 class GeneralCombinersStruct {
@@ -97,7 +101,7 @@ public:
             errors.set("too many general-combiners", ::line_number);
         return *this;
     }
-    void Validate(int numConsts, ConstColorStruct *cc);
+    void Validate(ConstColorsStruct *ccs);
     void Invoke();
     GeneralCombinerStruct general[RCP_NUM_GENERAL_COMBINERS];
     int num;
