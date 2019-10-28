@@ -31,16 +31,23 @@ void GeneralCombinersStruct::Validate(ConstColorsStruct *ccs)
     for (; i < maxGCs; i++)
         general[i].ZeroOut();
 
-    localConsts = 0;
-    for (i = 0; i < num; i++)
-        localConsts += general[i].ccs.numConsts;
+    localConst0Count = 0;
+    localConst1Count = 0;
+    for (i = 0; i < num; i++) {
+        localConst0Count += general[i].ccs.Count(REG_CONSTANT_COLOR0);
+        localConst1Count += general[i].ccs.Count(REG_CONSTANT_COLOR1);
+    }
 
-    if (localConsts > 0)
-        // if (NULL == glCombinerStageParameterfvNV)
-        //     errors.set("local constant(s) specified, but not supported -- ignored");
-        // else
-        for (i = 0; i < num; i++)
-            general[i].ccs.SetUnusedConsts(ccs);
+    // if (localConst0Count + localConst1Count > 0)
+    // if (NULL == glCombinerStageParameterfvNV)
+    //     errors.set("local constant(s) specified, but not supported -- ignored");
+    // else
+    for (i = 0; i < num; i++) {
+        if (localConst0Count > 0)
+            general[i].ccs.SetUnusedConst(REG_CONSTANT_COLOR0, ccs);
+        if (localConst1Count > 0)
+            general[i].ccs.SetUnusedConst(REG_CONSTANT_COLOR1, ccs);
+    }
 
 
 }
@@ -63,11 +70,11 @@ void GeneralCombinersStruct::Invoke()
 
     printf("pb_push1(p, NV097_SET_COMBINER_CONTROL,");
     printf("\n    MASK(NV097_SET_COMBINER_CONTROL_FACTOR0, %s)",
-        localConsts > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR0_EACH_STAGE"
-                : "NV097_SET_COMBINER_CONTROL_FACTOR0_SAME_FACTOR_ALL");
+        localConst0Count > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR0_EACH_STAGE"
+                             : "NV097_SET_COMBINER_CONTROL_FACTOR0_SAME_FACTOR_ALL");
     printf("\n    | MASK(NV097_SET_COMBINER_CONTROL_FACTOR1, %s)",
-        localConsts > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR1_EACH_STAGE"
-                : "NV097_SET_COMBINER_CONTROL_FACTOR1_SAME_FACTOR_ALL");
+        localConst1Count > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR1_EACH_STAGE"
+                             : "NV097_SET_COMBINER_CONTROL_FACTOR1_SAME_FACTOR_ALL");
     printf("\n    | MASK(NV097_SET_COMBINER_CONTROL_ITERATION_COUNT, %d)", num);
     printf(");\n");
     printf("p += 2;\n");
@@ -85,18 +92,25 @@ void GeneralCombinerStruct::ZeroOut()
 }
 
 
-void ConstColorsStruct::SetUnusedConsts(ConstColorsStruct *ccs)
+int ConstColorsStruct::Count(int reg_name)
+{
+    int count = 0;
+    int i;
+    for (i = 0; i < numConsts; i++)
+        if (cc[i].reg.bits.name == reg_name)
+            count++;
+    return count;
+}
+
+void ConstColorsStruct::SetUnusedConst(int reg_name, ConstColorsStruct *ccs)
 {
     int i;
     for (i = 0; i < ccs->numConsts; i++) {
-        bool constUsed = false;
-        int j;
-        for (j = 0; j < numConsts; j++)
-            constUsed |= (cc[j].reg.bits.name == ccs->cc[i].reg.bits.name);
-        if (!constUsed) {
-            assert(numConsts < 2);
-            cc[numConsts++] = ccs->cc[i];
-        }
+        if (ccs->cc[i].reg.bits.name == reg_name)
+            if (Count(reg_name) == 0) {
+                assert(numConsts < 2);
+                cc[numConsts++] = ccs->cc[i];
+            }
     }
 }
 

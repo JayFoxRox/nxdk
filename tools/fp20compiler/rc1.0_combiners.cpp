@@ -28,14 +28,17 @@ void CombinersStruct::Invoke()
     //     glCombinerParameterfvNV(cc[i].reg.bits.name, &(cc[i].v[0]));
         const char* general_cmd = NULL;
         const char* final_cmd = NULL;
+        int localConstCount = 0;
         switch(ccs.cc[i].reg.bits.name) {
         case REG_CONSTANT_COLOR0:
             general_cmd = "NV097_SET_COMBINER_FACTOR0";
             final_cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 0";
+            localConstCount = generals.localConst0Count;
             break;
         case REG_CONSTANT_COLOR1:
             general_cmd = "NV097_SET_COMBINER_FACTOR1";
             final_cmd = "NV097_SET_SPECULAR_FOG_FACTOR + 4";
+            localConstCount = generals.localConst1Count;
             break;
         default:
             assert(false);
@@ -50,7 +53,7 @@ void CombinersStruct::Invoke()
         //   will emit its own constants (for FACTOR#_EACH_STAGE).
         // Also see mode selection in GeneralCombinersStruct::Invoke() and
         // local-constant emitter in GeneralCombinerStruct::Invoke(int stage).
-        if (generals.localConsts == 0) {
+        if (localConstCount == 0) {
             printf("pb_push1(p, %s,", general_cmd);
             printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(ccs.cc[i].v[3] * 0xFF));
             printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(ccs.cc[i].v[0] * 0xFF));

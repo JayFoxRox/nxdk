@@ -30,7 +30,8 @@ public:
     void Init()
     { numConsts = 0; }
     void Validate();
-    void SetUnusedConsts(ConstColorsStruct *ccs);
+    int Count(int reg_name);
+    void SetUnusedConst(int reg_name, ConstColorsStruct *ccs);
     ConstColorStruct cc[2];
     int numConsts;
 };
@@ -105,7 +106,8 @@ public:
     void Invoke();
     GeneralCombinerStruct general[RCP_NUM_GENERAL_COMBINERS];
     int num;
-    int localConsts;
+    int localConst0Count;
+    int localConst1Count;
 };
 
 
