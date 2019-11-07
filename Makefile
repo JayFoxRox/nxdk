@@ -101,6 +101,7 @@ endif
 
 DEPS := $(filter %.c.d, $(SRCS:.c=.c.d))
 DEPS += $(filter %.cpp.d, $(SRCS:.cpp=.cpp.d))
+DEPS += $(filter %.cc.d, $(SRCS:.cc=.cc.d))
 
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE     ] $@"
@@ -124,6 +125,10 @@ main.exe: $(OBJS) $(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
 %.lib:
 	@echo "[ LIB      ] $@"
 	$(VE) $(LIB) -out:'$@' $^
+
+%.obj: %.cc
+	@echo "[ CXX*     ] $@"
+	$(VE) $(CXX) $(NXDK_CXXFLAGS) $(CXXFLAGS) -MD -MP -MT '$@' -MF '$(patsubst %.cc,%.cc.d,$<)' -c -o '$@' '$<'
 
 %.obj: %.cpp
 	@echo "[ CXX      ] $@"

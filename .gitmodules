@@ -15,3 +15,15 @@
 [submodule "lib/sdl/SDL_ttf"]
 	path = lib/sdl/SDL_ttf
 	url = https://github.com/SDL-mirror/SDL_ttf
+[submodule "lib/theora/theora"]
+	path = lib/theora/theora
+	url = https://github.com/xiph/theora.git
+[submodule "lib/libvpx/libvpx"]
+	path = lib/libvpx/libvpx
+	url = https://github.com/webmproject/libvpx.git
+[submodule "lib/ogg/ogg"]
+	path = lib/ogg/ogg
+	url = https://github.com/xiph/ogg.git
+[submodule "lib/libyuv/libyuv"]
+	path = lib/libyuv/libyuv
+	url = https://github.com/JayFoxRox/nxdk-libyuv
