@@ -1,0 +1,12 @@
+// C-style
+!!RC1.0
+{
+  rgb {
+    spare0 = col0.rgb; // NV097_SET_COMBINER_COLOR_ICW_A_ALPHA = 0
+  }
+  alpha {
+    spare0 = col0.a; // NV097_SET_COMBINER_ALPHA_ICW_A_ALPHA = 1
+  }
+}
+out.rgb = spare0.rgb; // NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_ALPHA = 0
+out.a = spare0.b; // NV097_SET_COMBINER_SPECULAR_FOG_CW1_G_ALPHA = 1

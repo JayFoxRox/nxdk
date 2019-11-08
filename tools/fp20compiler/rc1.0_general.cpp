@@ -253,6 +253,12 @@ void GeneralFunctionStruct::Validate(int stage, int portion)
 }
 
 static void GenerateInput(int portion, char variable, MappedRegisterStruct reg) {
+
+    // For RGB we can select .rgb or .aaa
+    assert((portion != RCP_RGB) || ((reg.reg.bits.channel == RCP_RGB) || (reg.reg.bits.channel == RCP_ALPHA)));
+    // For ALPHA we can select .b or .a
+    assert((portion != RCP_ALPHA) || ((reg.reg.bits.channel == RCP_BLUE) || (reg.reg.bits.channel == RCP_ALPHA)));
+
     const char* portion_s = portion == RCP_RGB ? "COLOR" : "ALPHA";
     printf("MASK(NV097_SET_COMBINER_%s_ICW_%c_SOURCE, 0x%x)", portion_s, variable, reg.reg.bits.name);
     printf(" | MASK(NV097_SET_COMBINER_%s_ICW_%c_ALPHA, %d)", portion_s, variable,
