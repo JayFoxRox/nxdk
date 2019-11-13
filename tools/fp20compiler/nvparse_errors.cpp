@@ -29,6 +29,7 @@ void nvparse_errors::reset()
 
 void nvparse_errors::set(const char * e)
 {
+  printf("%s\n", e);
 	if(num_errors < NVPARSE_MAX_ERRORS)
 		elist[num_errors++] = strdup(e);
 }
@@ -36,7 +37,7 @@ void nvparse_errors::set(const char * e)
 void nvparse_errors::set(const char * e, int line_number)
 {
 	char buff[256];
-	sprintf(buff, "error on line %d: %s", line_number, e);
+	printf("error on line %d: %s\n", line_number, e);
 	if(num_errors < NVPARSE_MAX_ERRORS)
 		elist[num_errors++] = strdup(buff);
 }
