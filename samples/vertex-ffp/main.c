@@ -92,9 +92,17 @@ int main(void)
     //FIXME: This matrix should be transposed
     matrix_viewport(m_viewport, 0, 0, width, height, 0, (float)0xFFFF);
 
-    //FIXME: This is already set in pbkit probably?
-    //p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
-    //p = xgu_set_viewport_scale(p, 1.0f / width, 1.0f / height, 1.0f / (float)0xFFFF, 1.0f);
+    // We reset the hardware viewport transform as it's included in our matrix
+    p = pb_begin();
+    p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
+
+#if 0
+    // I've set this one to random values, and nothing ever changed.
+    // I'm not sure under which conditions it's used.
+    p = xgu_set_viewport_scale(p, 1.0f, 1.0f, 1.0f, 1.0f);
+#endif
+
+    pb_end(p);
 
     /* Setup to determine frames rendered every second */
     start = now = last = GetTickCount();
