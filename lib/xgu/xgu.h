@@ -694,20 +694,67 @@ DWORD* xgu_set_light_local_attenuation(DWORD* p, unsigned int light_index, XguVe
     return push_floats(p, v.f, 3);
 }
 
-/* ==== Direct Mode stuff ==== */
+/* ==== Immediate Mode ==== */
 
 inline
-DWORD* xgu_set_vertex3f(DWORD* p, XguVec3 v) {
+DWORD* xgu_vertex3f(DWORD* p, float x, float y, float z) {
     p = push_command(p, NV097_SET_VERTEX3F, 3);
-    return push_floats(p, v.f, 3);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    return p;
 }
 
 inline
-DWORD* xgu_set_vertex4f(DWORD* p, XguVec4 v) {
+DWORD* xgu_vertex4f(DWORD* p, float x, float y, float z, float w) {
+    //FIXME: What's the difference to `return xgu_set_vertex_data4f(p, 0, x, y, z, w)`?
     p = push_command(p, NV097_SET_VERTEX4F, 4);
-    return push_floats(p, v.f, 4);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    p = push_float(p, w);
+    return p;
 }
 
+inline
+DWORD* xgu_set_vertex_data2f(DWORD* p, XguVertexArray index, float x, float y) {
+    //FIXME: Why does this even have to exist? Can't we use parts of the 4F variant?
+    p = push_command(p, NV097_SET_VERTEX_DATA2F_M + index * 2*4, 2);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    return p;
+}
 
+inline
+DWORD* xgu_set_vertex_data4f(DWORD* p, XguVertexArray index, float x, float y, float z, float w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA4F_M + index * 4*4, 4);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    p = push_float(p, w);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data2s(DWORD* p, XguVertexArray index, int16_t x, int16_t y) {
+    p = push_command(p, NV097_SET_VERTEX_DATA2S + index * 1*4, 1);
+    p = push_parameter(p, (uint16_t)y << 16 | (uint16_t)x);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data4ub(DWORD* p, XguVertexArray index, uint8_t x, uint8_t y, uint8_t z, uint8_t w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA2S + index * 1*4, 1);
+    p = push_parameter(p, w << 24 | z << 16 | y << 8 | x);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data4s(DWORD* p, XguVertexArray index, int16_t x, int16_t y, int16_t z, int16_t w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA4S_M + index * 2*4, 2);
+    p = push_parameter(p, (uint16_t)y << 16 | (uint16_t)x);
+    p = push_parameter(p, (uint16_t)w << 16 | (uint16_t)z);
+    return p;
+}
 
 #endif
