@@ -2,6 +2,8 @@ ifeq ($(DXT_TITLE),)
 DXT_TITLE = nxdk_app
 endif
 
+CDXT         = $(NXDK_DIR)/tools/cxbe/cdxt
+
 LDFLAGS += $(NXDK_DIR)/lib/xbdm/libxbdm.lib
 
 # Try to reduce size
@@ -16,26 +18,11 @@ NXDK_STACKSIZE=65536 -entry:DxtEntry
 # This is the first Makefile target, as we try to avoid building an XBE (which would otherwise be the first target).
 # A bit of a hack because bin/ does not exist.
 #
-# This target also has to solve a problem with DXTs.
-# For DXTs, we require that section raw-address = virtual-address.
-# The loader in XBDM.dll does not remap sections.
-# So if our DXT does not respect this, then it would crash during relocation (using .reloc) when trying to access the sections.
-#
-#FIXME: we can't even use -align, because that's also broken (https://bugs.llvm.org/show_bug.cgi?id=41582)
-#       -filealign also isn't supported in lld-link
-#
-#       llvm-objcopy also can't do it, so we must rely on objcopy.
-#       This would be ideal:
-#
-#         @objcopy --file-alignment=0x20 --section-alignment=0x20 --image-base=0x400000 --subsystem:xbox "$<" "$@"
-#
-#       But it doesn't recalculate the section addresses, so we just try to make file-alignment same as section-alignment.
-#
 #FIXME: The proper solution is to run a tool which moves sections in the EXE or XBE around
 bin/$(DXT_TITLE).dxt: main.exe
 	@echo "[ BUILD    ] $@"
 	@mkdir -p bin/
-	@objcopy --file-alignment=0x1000 "$<" "$@"
+	$(CDXT) -OUT:$@ $<
 	@llvm-strip --strip-unneeded "$@"
 
 #FIXME: objcopy alone isn't enough; some sections will still shift content around; we merge those
