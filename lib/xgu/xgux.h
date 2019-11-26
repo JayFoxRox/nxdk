@@ -155,4 +155,30 @@ GENERIC_ATTRIBUTE(vertex_attribute, index, unsigned int index, x, y, z, w)
 #define xgux_set_texcoord3f(index, s, t, r) \
   xgu_set_vertex_data4f(p, 8+(index), (s), (t), (r), 1.0f)
 
+
+// This is as for D3D; you have to do this on your own:
+//
+//   size = viewport_height * size;
+//
+// This function then prepares it for this:
+//
+//   render_size = size * sqrt(1.0 / (constant_scale +
+//                                    linear_scale * distance +
+//                                    squared_scale * distance^2);
+//   render_size = clamp(render_size, minimum, maximum);
+//FIXME: Remove p argument?
+inline
+uint32_t* xgux_set_pointscale(uint32_t* p, float size, float constant_scale, float linear_scale, float squared_scale, float minimum, float maximum) {
+    float range = maximum - minimum;
+    float factor = range / size;
+    float squared_factor = factor * factor;
+    return xgu_set_pointscale(p,
+                              constant_scale * squared_factor,
+                              linear_scale * squared_factor,
+                              squared_scale * squared_factor,
+                              range, range, range, //FIXME: Why 3 times?
+                              -minimum / range, //FIXME: Why divided by range?
+                              minimum); //FIXME: Why minimum 2 times?
+}
+
 #endif
