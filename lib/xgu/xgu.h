@@ -694,20 +694,127 @@ DWORD* xgu_set_light_local_attenuation(DWORD* p, unsigned int light_index, XguVe
     return push_floats(p, v.f, 3);
 }
 
-/* ==== Direct Mode stuff ==== */
+/* ==== Immediate Mode ==== */
 
 inline
-DWORD* xgu_set_vertex3f(DWORD* p, XguVec3 v) {
+DWORD* xgu_vertex3f(DWORD* p, float x, float y, float z) {
     p = push_command(p, NV097_SET_VERTEX3F, 3);
-    return push_floats(p, v.f, 3);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    return p;
 }
 
 inline
-DWORD* xgu_set_vertex4f(DWORD* p, XguVec4 v) {
+DWORD* xgu_vertex4f(DWORD* p, float x, float y, float z, float w) {
+    //FIXME: What's the difference to `return xgu_set_vertex_data4f(p, 0, x, y, z, w)`?
     p = push_command(p, NV097_SET_VERTEX4F, 4);
-    return push_floats(p, v.f, 4);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    p = push_float(p, w);
+    return p;
 }
 
+inline
+DWORD* xgu_set_vertex_data2f(DWORD* p, XguVertexArray index, float x, float y) {
+    //FIXME: Why does this even have to exist? Can't we use parts of the 4F variant?
+    p = push_command(p, NV097_SET_VERTEX_DATA2F_M + index * 2*4, 2);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    return p;
+}
 
+inline
+DWORD* xgu_set_vertex_data4f(DWORD* p, XguVertexArray index, float x, float y, float z, float w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA4F_M + index * 4*4, 4);
+    p = push_float(p, x);
+    p = push_float(p, y);
+    p = push_float(p, z);
+    p = push_float(p, w);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data2s(DWORD* p, XguVertexArray index, int16_t x, int16_t y) {
+    p = push_command(p, NV097_SET_VERTEX_DATA2S + index * 1*4, 1);
+    p = push_parameter(p, (uint16_t)y << 16 | (uint16_t)x);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data4ub(DWORD* p, XguVertexArray index, uint8_t x, uint8_t y, uint8_t z, uint8_t w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA2S + index * 1*4, 1);
+    p = push_parameter(p, w << 24 | z << 16 | y << 8 | x);
+    return p;
+}
+
+inline
+DWORD* xgu_set_vertex_data4s(DWORD* p, XguVertexArray index, int16_t x, int16_t y, int16_t z, int16_t w) {
+    p = push_command(p, NV097_SET_VERTEX_DATA4S_M + index * 2*4, 2);
+    p = push_parameter(p, (uint16_t)y << 16 | (uint16_t)x);
+    p = push_parameter(p, (uint16_t)w << 16 | (uint16_t)z);
+    return p;
+}
+
+// Point rendering
+
+//FIXME: Move upstream
+#define NV097_SET_POINT_PARAMS_ENABLE   0x00000318
+#define NV097_SET_POINT_SMOOTH_ENABLE   0x0000031c
+#define NV097_SET_POINT_SIZE            0x0000043c
+#define NV097_SET_POINT_PARAMS          0x00000a30
+
+inline
+uint32_t* xgu_set_pointsize(uint32_t* p, float size) {
+    uint32_t encoded_size = size * 8; // 8 is a hardware factor
+    assert(encoded_size <= 0x1FF);
+    return push_command_parameter(p, NV097_SET_POINT_SIZE, encoded_size);
+}
+
+inline
+uint32_t* xgu_set_pointscale_enable(uint32_t* p, bool enable) {
+    return push_command_parameter(p, NV097_SET_POINT_PARAMS_ENABLE, enable);
+}
+
+inline
+uint32_t* xgu_set_pointsmooth_enable(uint32_t* p, bool enable) {
+    return push_command_parameter(p, NV097_SET_POINT_SMOOTH_ENABLE, enable);
+}
+
+//FIXME: This is trying to derive the formula
+//
+// tmp = constant_scale + linear_scale * distance + squared_scale * distance^2;
+//             a               b                         c
+//FIXME: a, b, c are missing the scaling that's applied to prepare them
+//
+// render_size^2 = size^2 / tmp;
+//
+// minimum < render_size < maximum [FIXME: One of these is inclusive apparently?]
+//FIXME: Apply this to the above formula
+//
+// The exact formula is still unknown, but these are the parameters:
+//
+// a = prepared constant factor
+// b = prepared linear factor
+// c = prepared squared factor
+// d = range
+// e = range
+// f = range
+// g = minimum, scaled by negative range
+// h = minimum
+inline
+uint32_t* xgu_set_pointscale(uint32_t* p, float a, float b, float c, float d, float e, float f, float g, float h) {
+    p = push_command(p, NV097_SET_POINT_PARAMS, 8);
+    p = push_parameter(p, a);
+    p = push_parameter(p, b);
+    p = push_parameter(p, c);
+    p = push_parameter(p, d);
+    p = push_parameter(p, e);
+    p = push_parameter(p, f);
+    p = push_parameter(p, g);
+    p = push_parameter(p, h);
+    return p;
+}
 
 #endif
