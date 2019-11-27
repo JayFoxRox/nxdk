@@ -131,8 +131,8 @@ Xbe::Xbe(const char *x_szFilename)
             goto cleanup;
         }
 
+        // generate ascii title from certificate title name
         setlocale( LC_ALL, "English" );
-
         //wcstombs(m_szAsciiTitle, m_Certificate.wszTitleName, 40);
         char *c = m_szAsciiTitle;
         char *d = (char *) m_Certificate.wszTitleName;
@@ -140,7 +140,7 @@ Xbe::Xbe(const char *x_szFilename)
            *c++ = *d++;
            d++;
         }
-
+        *c = '\0';
 
         printf("OK\n");
 
@@ -538,7 +538,7 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
             m_Certificate.dwTitleId = 0xFFFF0002;
 
             // title name
-            memset(m_Certificate.wszTitleName, 0, 40);
+            memset(m_Certificate.wszTitleName, 0, sizeof(m_Certificate.wszTitleName));
             //mbstowcs(m_Certificate.wszTitleName, x_szTitle, 40);
             const char *p = x_szTitle;
             char *q = (char *) m_Certificate.wszTitleName;
@@ -592,13 +592,14 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
 
         // generate ascii title from certificate title name
         setlocale( LC_ALL, "English" );
-        ///wcstombs(m_szAsciiTitle, m_Certificate.wszTitleName, 40);
+        //wcstombs(m_szAsciiTitle, m_Certificate.wszTitleName, 40);
         char *c = m_szAsciiTitle;
         char *d = (char *) m_Certificate.wszTitleName;
         while (*d) {
            *c++ = *d++;
            d++;
         }
+        *c = '\0';
 
 
 
@@ -1082,10 +1083,13 @@ void Xbe::ConstructorInit()
     m_bzSection            = 0;
 }
 
-// better time
-static char *BetterTime(char *x_ctime)
+// returns xbe timestamp date as string (reuses ctime buffer)
+static char *XbeTime(uint32 timestamp)
 {
     int v=0;
+
+    time_t time = timestamp;
+    char *x_ctime = ctime(&time);
 
     for(v=0;x_ctime[v] != '\n';v++);
 
@@ -1126,7 +1130,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "Size of Headers                  : 0x%.08X\n", m_Header.dwSizeofHeaders);
     fprintf(x_file, "Size of Image                    : 0x%.08X\n", m_Header.dwSizeofImage);
     fprintf(x_file, "Size of Image Header             : 0x%.08X\n", m_Header.dwSizeofImageHeader);
-    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, BetterTime(ctime(&dwTimeDate)));
+    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, XbeTime(dwTimeDate));
     fprintf(x_file, "Certificate Address              : 0x%.08X\n", m_Header.dwCertificateAddr);
     fprintf(x_file, "Number of Sections               : 0x%.08X\n", m_Header.dwSections);
     fprintf(x_file, "Section Headers Address          : 0x%.08X\n", m_Header.dwSectionHeadersAddr);
@@ -1176,7 +1180,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "(PE) Base Address                : 0x%.08X\n", m_Header.dwPeBaseAddr);
     fprintf(x_file, "(PE) Size of Image               : 0x%.08X\n", m_Header.dwPeSizeofImage);
     fprintf(x_file, "(PE) Checksum                    : 0x%.08X\n", m_Header.dwPeChecksum);
-    fprintf(x_file, "(PE) TimeDate Stamp              : 0x%.08X (%s)\n", m_Header.dwPeTimeDate, BetterTime(ctime((time_t*)&m_Header.dwPeTimeDate)));
+    fprintf(x_file, "(PE) TimeDate Stamp              : 0x%.08X (%s)\n", m_Header.dwPeTimeDate, XbeTime(m_Header.dwPeTimeDate));
     fprintf(x_file, "Debug Pathname Address           : 0x%.08X (\"%s\")\n", m_Header.dwDebugPathnameAddr, GetAddr(m_Header.dwDebugPathnameAddr));
     fprintf(x_file, "Debug Filename Address           : 0x%.08X (\"%s\")\n", m_Header.dwDebugFilenameAddr, GetAddr(m_Header.dwDebugFilenameAddr));
     fprintf(x_file, "Debug Unicode filename Address   : 0x%.08X (L\"%s\")\n", m_Header.dwDebugUnicodeFilenameAddr, AsciiFilename);
@@ -1192,7 +1196,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "Dumping XBE Certificate...\n");
     fprintf(x_file, "\n");
     fprintf(x_file, "Size of Certificate              : 0x%.08X\n", m_Certificate.dwSize);
-    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Certificate.dwTimeDate, BetterTime(ctime((time_t*)&m_Certificate.dwTimeDate)));
+    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Certificate.dwTimeDate, XbeTime(m_Certificate.dwTimeDate));
     fprintf(x_file, "Title ID                         : 0x%.08X\n", m_Certificate.dwTitleId);
     fprintf(x_file, "Title                            : L\"%s\"\n", m_szAsciiTitle);
 

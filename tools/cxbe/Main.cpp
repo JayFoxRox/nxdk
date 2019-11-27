@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
     {
         char *szOption    = 0;
         char *szParam     = 0;
-        uint  dwParamSize = 0;
 
         // if this isn't an option, it must be the Exe file
         if(argv[v][0] != '-')
@@ -87,9 +86,6 @@ int main(int argc, char *argv[])
 
             szOption = &argv[v][1];
             szParam  = &argv[v][dwColon + 1];
-
-            while(szParam[dwParamSize] != 0)
-                dwParamSize++;
         }
 
         // interpret the current switch
@@ -113,10 +109,7 @@ int main(int argc, char *argv[])
             }
             else if(strcmp(szOptionU, "TITLE") == 0)
             {
-                if(dwParamSize > 256)
-                    printf("WARNING: Title too long, using default title\n");
-                else
-                    strcpy(szXbeTitle, szParam);
+                strcpy(szXbeTitle, szParam);
             }
             else if(strcmp(szOptionU, "MODE") == 0)
             {
@@ -138,6 +131,12 @@ int main(int argc, char *argv[])
                 goto cleanup;
             }
         }
+    }
+
+    if(strlen(szXbeTitle) > 40)
+    {
+        printf("WARNING: Title too long, trimming\n");
+        szXbeTitle[40] = '\0';
     }
 
     // verify we recieved the required parameters
@@ -167,15 +166,14 @@ int main(int argc, char *argv[])
 
             char *szWorking = szFilename;
 
-            strncpy(szWorkingU, szWorking, 265);
-
             for(int c=0;szFilename[c] != 0;c++)
                 if(szFilename[c] == '.')
                     szWorking = &szFilename[c];
 
-            MakeUpper(szWorking);
+            strncpy(szWorkingU, szWorking, 265);
+            MakeUpper(szWorkingU);
 
-            if(strcmp(szWorkingU, ".exe") == 0)
+            if(strcmp(szWorkingU, ".EXE") == 0)
                 strcpy(szWorking, ".xbe");
             else
                 strcat(szXbeFilename, ".xbe");
