@@ -19,6 +19,23 @@ void CombinersStruct::Validate()
     final.Validate();
 }
 
+static void PrintColorSetter(const char* cmd, const ConstColorStruct& cc) {
+    //FIXME: Move to ConstColorStruct::Validate?
+    assert(cc.v[0] >= 0.0f && cc.v[0] <= 1.0f);
+    assert(cc.v[1] >= 0.0f && cc.v[1] <= 1.0f);
+    assert(cc.v[2] >= 0.0f && cc.v[2] <= 1.0f);
+    assert(cc.v[3] >= 0.0f && cc.v[3] <= 1.0f);
+
+    //FIXME: Move to ConstColorStruct::Invoke(bool isFinal)?
+    printf("pb_push1(p, %s,", cmd);
+    printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc.v[3] * 0xFF));
+    printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc.v[0] * 0xFF));
+    printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc.v[1] * 0xFF));
+    printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc.v[2] * 0xFF));
+    printf(");\n");
+    printf("p += 2;\n");
+}
+
 void CombinersStruct::Invoke()
 {
     assert(numConsts <= 2);
@@ -40,11 +57,6 @@ void CombinersStruct::Invoke()
             break;
         }
 
-        assert(cc[i].v[0] >= 0.0f && cc[i].v[0] <= 1.0f);
-        assert(cc[i].v[1] >= 0.0f && cc[i].v[1] <= 1.0f);
-        assert(cc[i].v[2] >= 0.0f && cc[i].v[2] <= 1.0f);
-        assert(cc[i].v[3] >= 0.0f && cc[i].v[3] <= 1.0f);
-
         // - If no local-constants are used, the general-combiners only use
         //   global-constants (so we use FACTOR#_SAME_FACTOR_ALL).
         //   NV2A takes those from the first stage, which we emit here.
@@ -54,23 +66,11 @@ void CombinersStruct::Invoke()
         // Also see mode selection in GeneralCombinersStruct::Invoke() and
         // local-constant emitter in GeneralCombinerStruct::Invoke(int stage).
         if (generals.localConsts == 0) {
-            printf("pb_push1(p, %s,", general_cmd);
-            printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
-            printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
-            printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
-            printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc[i].v[2] * 0xFF));
-            printf(");\n");
-            printf("p += 2;\n");
+            PrintColorSetter(general_cmd, cc[i]);
         }
 
         // Global-constants are also used in final-combiner
-        printf("pb_push1(p, %s,", final_cmd);
-        printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
-        printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
-        printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
-        printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc[i].v[2] * 0xFF));
-        printf(");\n");
-        printf("p += 2;\n");
+        PrintColorSetter(final_cmd, cc[i]);
     }
 
 
