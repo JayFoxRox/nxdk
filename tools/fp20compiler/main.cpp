@@ -19,15 +19,6 @@ bool ts10_init(char *);
 int  ts10_parse();
 bool is_ts10(const char *);
 
-// DX8 stuff
-
-// PS1.0  -- DX8 Pixel Shader 1.0 configuration
-bool ps10_init(char *);
-int  ps10_parse();
-bool ps10_set_map(const std::vector<int>& argv);
-bool is_ps10(const char *);
-const int* ps10_get_info(int* pcount);
-
 
 
 nvparse_errors errors;

@@ -2,7 +2,6 @@ MAIN = fp20compiler
 CXXFLAGS= -DYY_NO_UNPUT -Wall -g
 
 INCLUDES = $(wildcard *.h) \
-	_ps1.0_parser.hpp \
 	_rc1.0_parser.hpp \
 	_ts1.0_parser.hpp
 
@@ -16,10 +15,7 @@ SRCS = main.cpp \
 	_ts1.0_parser.cpp \
 	_ts1.0_lexer.cpp \
 	_rc1.0_lexer.cpp \
-	_rc1.0_parser.cpp \
-	_ps1.0_lexer.cpp \
-	_ps1.0_parser.cpp \
-	ps1.0_program.cpp
+	_rc1.0_parser.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -29,17 +25,11 @@ $(MAIN): $(OBJS)
 %.o: %.cpp ${INCLUDES}
 	$(CXX) $(CXXFLAGS) -c -o '$@' '$<'
 
-_ps1.0_parser.cpp _ps1.0_parser.hpp: ps1.0_grammar.y
-	bison -d -o _ps1.0_parser.cpp -p ps10_ ps1.0_grammar.y
-
 _rc1.0_parser.cpp _rc1.0_parser.hpp: rc1.0_grammar.y
 	bison -d -o _rc1.0_parser.cpp -p rc10_ rc1.0_grammar.y
 
 _ts1.0_parser.cpp _ts1.0_parser.hpp: ts1.0_grammar.y
 	bison -d -o _ts1.0_parser.cpp -p ts10_ ts1.0_grammar.y
-
-_ps1.0_lexer.cpp: ps1.0_tokens.l
-	flex -Pps10_ -o_ps1.0_lexer.cpp ps1.0_tokens.l
 
 _rc1.0_lexer.cpp: rc1.0_tokens.l
 	flex -Prc10_ -o_rc1.0_lexer.cpp rc1.0_tokens.l
@@ -49,7 +39,6 @@ _ts1.0_lexer.cpp: ts1.0_tokens.l
 
 .PHONY: clean
 clean:
-	rm -f _ps1.0_parser.cpp _ps1.0_parser.hpp _ps1.0_lexer.cpp
 	rm -f _rc1.0_parser.cpp _rc1.0_parser.hpp _rc1.0_lexer.cpp
 	rm -f _ts1.0_parser.cpp _ts1.0_parser.hpp _ts1.0_lexer.cpp
 	rm -f $(OBJS)
