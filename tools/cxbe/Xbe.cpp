@@ -66,7 +66,13 @@ Xbe::Xbe(const char *x_szFilename)
     {
         printf("Xbe::Xbe: Storing Xbe Path...");
 
-        strcpy(m_szPath, x_szFilename);
+        if(strlen(x_szFilename) > sizeof(m_szPath)-1)
+        {
+            SetError("Xbe Path too long", true);
+            goto cleanup;
+        }
+
+        strncpy(m_szPath, x_szFilename, sizeof(m_szPath)-1);
 
         int v=0, c=0;
 
