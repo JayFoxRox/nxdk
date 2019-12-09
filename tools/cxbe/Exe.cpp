@@ -45,11 +45,11 @@ Exe::Exe(const char *x_szFilename)
 
     FILE *ExeFile = fopen(x_szFilename, "rb");
 
-    // verify Exe file was opened
-    if(ExeFile == 0)
+    // verify Exe file was opened successfully
+    if(ExeFile == NULL)
     {
-        SetError("Could not open Exe file.", true);
-        return;
+        SetError("Could not open Exe file", true);
+        goto cleanup;
     }
 
     printf("OK\n");
@@ -228,11 +228,11 @@ void Exe::Export(const char *x_szExeFilename)
 
     FILE *ExeFile = fopen(x_szExeFilename, "wb");
 
-    // verify file was opened successfully
-    if(ExeFile == 0)
+    // verify Exe file was opened successfully
+    if(ExeFile == NULL)
     {
-        SetError("Could not open .exe file.", false);
-        return;
+        SetError("Could not open Exe file", true);
+        goto cleanup;
     }
 
     printf("OK\n");

@@ -54,10 +54,10 @@ Xbe::Xbe(const char *x_szFilename)
     FILE *XbeFile = fopen(x_szFilename, "rb");
 
     // verify Xbe file was opened successfully
-    if(XbeFile == 0)
+    if(XbeFile == NULL)
     {
-        SetError("Could not open Xbe file.", true);
-        return;
+        SetError("Could not open Xbe file", true);
+        goto cleanup;
     }
 
     printf("OK\n");
@@ -939,10 +939,10 @@ void Xbe::Export(const char *x_szXbeFilename)
     FILE *XbeFile = fopen(x_szXbeFilename, "wb");
 
     // verify Xbe file was opened successfully
-    if(XbeFile == 0)
+    if(XbeFile == NULL)
     {
-        SetError("Could not open .xbe file.", false);
-        return;
+        SetError("Could not open Xbe file", true);
+        goto cleanup;
     }
 
     printf("OK\n");
