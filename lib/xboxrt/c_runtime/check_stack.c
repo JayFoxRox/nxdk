@@ -1,4 +1,4 @@
-#include <debug.h>
+#include <hal/debug.h>
 #include <xboxkrnl/xboxkrnl.h>
 
 #ifdef DEBUG_CONSOLE
