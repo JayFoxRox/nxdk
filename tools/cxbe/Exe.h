@@ -209,6 +209,7 @@ class Exe : public Error
 #define IMAGE_SUBSYSTEM_POSIX_CUI            7
 #define IMAGE_SUBSYSTEM_NATIVE_WINDOWS       8
 #define IMAGE_SUBSYSTEM_WINDOWS_CE_GUI       9
+#define IMAGE_SUBSYSTEM_XBOX                14
 
 // directory entries
 #define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
