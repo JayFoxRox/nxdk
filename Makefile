@@ -89,6 +89,11 @@ include $(NXDK_DIR)/lib/sdl/SDL2/Makefile.xbox
 include $(NXDK_DIR)/lib/sdl/Makefile
 endif
 
+ifneq ($(NXDK_RDT),)
+include $(NXDK_DIR)/lib/nxdk-rdt/Makefile
+endif
+
+
 V = 0
 VE_0 := @
 VE_1 :=
