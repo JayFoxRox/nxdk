@@ -26,6 +26,6 @@ bin/$(DXT_TITLE).dxt: main.exe
 	@llvm-strip --strip-unneeded "$@"
 
 #FIXME: objcopy alone isn't enough; some sections will still shift content around; we merge those
-LDFLAGS += -merge:.tls=.text -merge:.rdata=.data
+LDFLAGS += -merge:.tls=.text -merge:.rdata=.data -align:32
 
 include $(NXDK_DIR)/Makefile
