@@ -37,3 +37,8 @@ Each style is shown with 2 interpolations:
 
 In a real application you'd likely use a custom interpolator (a custom curve).
 You'd also vary the duration of the animation.
+
+This sample swaps the image during the fade.
+In a real application, you would preload these images into memory (or draw them in realtime).
+
+The images in this sample have been obtained from https://picography.co/.

@@ -1,10 +1,62 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 #include <math.h>
 #include <hal/video.h>
 #include <hal/debug.h>
 #include <windows.h>
+#include <SDL.h>
+
+static void draw_title(const char* title)
+{
+    extern int nextCol;
+    extern int nextRow;
+    nextCol = 25;
+    nextRow = 25;
+    debugPrint("%s", title);
+    for(int i = strlen(title); i < 60; i++) {
+        debugPrint(" ");
+    }
+}
+
+static void draw_next_image()
+{
+    /* Generate image filename */
+    static int image_index = 0;
+    char path[32];
+    sprintf(path, "image-%d.bmp", image_index);
+
+    /* Load image from file */
+    SDL_Surface* image = SDL_LoadBMP(path);
+
+    /* If this image was not loadable, restart from first image */
+    if (image == NULL) {
+        assert(image_index > 0);
+        image_index = 0;
+        draw_next_image();
+        return;
+    }
+
+    /* Copy image to framebuffer */
+    SDL_LockSurface(image);
+    assert(image->w <= 640);
+    assert(image->h <= 480);
+    SDL_ConvertPixels(image->w, image->h,
+                      image->format->format,
+                      image->pixels,
+                      image->pitch,
+                      SDL_PIXELFORMAT_RGB888,
+                      (void*)XVideoGetFB(),
+                      640 * 4);
+    SDL_UnlockSurface(image);
+
+    /* Unload image */
+    SDL_FreeSurface(image);
+
+    /* Prepare to load another image next time */
+    image_index++;
+}
 
 float remap(float in_low,  float in_high,
             float out_low, float out_high,
@@ -122,6 +174,9 @@ static void do_mix_fade(float red, float green, float blue,
                  interpolator(t));
     }
 
+    /* Swap image */
+    draw_next_image();
+
     /* Fade to image */
     ts_start = GetTickCount();
     while(animate_frame(ts_start, GetTickCount(), duration / 2.0f, &t)) {
@@ -152,6 +207,9 @@ static void do_cinematic_fade(float a_black_input,  float a_white_input,
                        interpolator(t));
     }
 
+    /* Swap image */
+    draw_next_image();
+
     /* Fade to image */
     ts_start = GetTickCount();
     while(animate_frame(ts_start, GetTickCount(), duration / 2.0f, &t)) {
@@ -166,43 +224,14 @@ static void do_cinematic_fade(float a_black_input,  float a_white_input,
     reset_gamma();
 }
 
-static void draw_title(const char* title)
-{
-    extern int nextCol;
-    extern int nextRow;
-    nextCol = 25;
-    nextRow = 25;
-    debugPrint("%s", title);
-    for(int i = strlen(title); i < 60; i++) {
-        debugPrint(" ");
-    }
-}
-
 int main(void)
 {
     float duration = 2000.0f;
 
     XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
-    /* Create test image in framebuffer */
-    uint32_t *rgbx = (uint32_t*)XVideoGetFB();
-    for(unsigned int y = 0; y < 480; y++) {
-        unsigned int stripe = y / (480/3);
-
-        /* Border left */
-        for(unsigned int x = 0; x < (640-512)/2; x++) {
-            *rgbx++ = 0x808080;
-        }
-        /* 512 pixels gradient */
-        for(unsigned int x = 0; x < 256; x++) {
-            *rgbx++ = x << (16 - stripe * 8);
-            *rgbx++ = x << (16 - stripe * 8);
-        }
-        /* Border right */
-        for(unsigned int x = 0; x < (640-512)/2; x++) {
-            *rgbx++ = 0x808080;
-        }
-    }
+    /* Draw image */
+    draw_next_image();
 
     while(1) {
 
