@@ -234,12 +234,86 @@ static void set_attrib_pointer(unsigned int index, unsigned int format, unsigned
     pb_end(p);
 }
 
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <hal/debug.h>
+#include <windows.h>
+
+static void write32(uintptr_t _src, size_t size, FILE* f) {
+  uint32_t* src = (uint32_t*)_src;
+  assert(size % 4 == 0);
+  size_t count = size / 4;
+  while(count--) {
+    uint32_t dst = *src++;
+    fwrite(&dst, 4, 1, f);
+  }
+}
+
+static void read32(uintptr_t _dst, size_t size, FILE* f) {
+  uint32_t* dst = (uint32_t*)_dst;
+  assert(size % 4 == 0);
+  size_t count = size / 4;
+  while(count--) {
+    uint32_t src;
+    fread(&src, 4, 1, f);
+    *dst++ = src;
+  }
+}
+
+
+static void dump() {
+  {
+    FILE* f = fopen("pgraph.bin", "wb");
+    write32(0xFD400000+0x0, 0x200, f);
+    uint8_t zero[0x200] = {0};
+    fwrite(zero, 0x200, 1, f);
+    write32(0xFD400000+0x400, (0x2000 - 0x400), f);
+    fclose(f);
+  }
+  {
+    FILE* f = fopen("pfb.bin", "wb");
+    write32(0xFD100000, 0x1000, f);
+    fclose(f);
+  }
+  debugPrint("dumped!\n");
+  Sleep(1000);
+}
+
+static void load() {
+  {
+    FILE* f = fopen("pgraph.bin", "rb");
+    read32(0xFD400000+0x0, 0x200, f);
+    fseek(f, 0x200, SEEK_CUR); // Skip 0x200 unknown bytes
+    read32(0xFD400000+0x400, (0x2000 - 0x400), f);
+    fclose(f);
+  }
+  {
+    FILE* f = fopen("pfb.bin", "rb");
+    read32(0xFD100000, 0x1000, f);
+    fclose(f);
+  }
+  debugPrint("loaded!\n");
+  Sleep(1000);
+}
+
 /* Send draw commands for the triangles */
 static void draw_arrays(unsigned int mode, int start, int count)
 {
+
+//load();
+
+
     uint32_t *p = pb_begin();
     p = pb_push1(p, NV097_SET_BEGIN_END, mode);
+    pb_end(p);
 
+
+//dump();
+
+
+    p = pb_begin();
     p = pb_push1(p, 0x40000000|NV097_DRAW_ARRAYS, //bit 30 means all params go to same register 0x1810
                  MASK(NV097_DRAW_ARRAYS_COUNT, (count-1)) | MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
 
