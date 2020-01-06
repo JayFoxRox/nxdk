@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -81,11 +82,36 @@ int main(void)
             draw_title(title);
 
             GAMMA_RAMP_ENTRY entries[256];
+            int hits5 = 0;
+            int hits6 = 0;
             for(int i = 0; i < 256; i++) {
                 entries[i].red   = i;
                 entries[i].green = (i == mark) ? 0xFF : 0x00;
                 entries[i].blue  = (i == mark) ? 0xFF : 0x00;
+
+#if 0
+                // Mark all possible values in 15bpp and 16bpp mode
+                unsigned int msb3 = i >> 5; // Keep 3 bits
+                unsigned int msb2 = i >> 6; // Keep 2 bits
+                unsigned int msb5 = i >> 3; // Keep 5 bits
+                unsigned int msb6 = i >> 2; // Keep 6 bits
+                bool hit5 = (i == ((msb5 << 3) | msb3));
+                bool hit6 = (i == ((msb6 << 2) | msb2));
+                if (bpp == 15) {
+                    entries[i].green = i + (hit5 ? 0x00 : 0x80);
+                } else {
+                    entries[i].green = i + (hit6 ? 0x00 : 0x80);
+                }
+                entries[i].blue = i + (hit5 ? 0x00 : 0x80);
+
+                if (hit5) { hits5++; }
+                if (hit6) { hits6++; }
             }
+            assert(hits5 == 32);
+            assert(hits6 == 64);
+#else
+            }
+#endif
             XVideoSetGammaRamp(0, entries, 256);
 
         }
