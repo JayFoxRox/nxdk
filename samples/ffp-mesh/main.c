@@ -229,6 +229,13 @@ pb_print("FFP\n");
     p = xgu_set_composite_matrix(p, mt_mvp); //FIXME: Always used in XQEMU?
     p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
 
+#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE                       0x00F00000
+
+p = pb_push1(p, NV097_SET_CONTROL0,
+             MASK(NV097_SET_CONTROL0_TEXTUREPERSPECTIVE, 1)
+             //| MASK(NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE, 1) [only for w-buffer?]
+             | MASK(NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE, 1));
+
 #define NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN 0x00F
 #define NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN        0x0F0
 #define NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W    0xF00
