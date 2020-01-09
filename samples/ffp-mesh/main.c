@@ -228,8 +228,23 @@ pb_print("FFP\n");
     p = xgu_set_projection_matrix(p, m_identity); //FIXME: Unused in XQEMU
     p = xgu_set_composite_matrix(p, mt_mvp); //FIXME: Always used in XQEMU?
     p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
-    p = xgu_set_viewport_scale(p, 1.0f, 1.0f, 1.0f, 1.0f); //FIXME: Ignored?!
-    //p = xgu_set_viewport_scale(p, 1.0f / width, 1.0f / height, 1.0f / (float)0xFFFF, 1.0f); //FIXME: Ignored?!
+
+#define NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN 0x00F
+#define NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN        0x0F0
+#define NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W    0xF00
+
+p = pb_push1(p, NV097_SET_ZMIN_MAX_CONTROL,
+             MASK(NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN, 1)
+             | MASK(NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN, 0)
+             | MASK(NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W, 0));
+
+
+
+#if 0
+//FIXME: These values must be bad, breaks pipelines
+p = xgu_set_clip_min(p, 0.0f*0xFFFF);
+p = xgu_set_clip_max(p, 1.0f*0xFFFF);
+#endif
 
 
     //FIXME: Fix depth values [why is this?]
