@@ -186,8 +186,11 @@ pb_print("FFP\n");
         p = xgu_set_lighting_enable(p, false);
 
         for(int i = 0; i < XGU_TEXTURE_COUNT; i++) {
-            //FIXME: p = xgu_set_texgen(p, XGU_TEXGEN_OFF);
-            //p = xgu_set_texture_matrix_enable(p, i, false);
+            p = xgu_set_texgen_s(p, i, XGU_TEXGEN_DISABLE);
+            p = xgu_set_texgen_t(p, i, XGU_TEXGEN_DISABLE);
+            p = xgu_set_texgen_r(p, i, XGU_TEXGEN_DISABLE);
+            p = xgu_set_texgen_q(p, i, XGU_TEXGEN_DISABLE);
+            p = xgu_set_texture_matrix_enable(p, i, false);
         }
 
         for(int i = 0; i < XGU_WEIGHT_COUNT; i++) {
