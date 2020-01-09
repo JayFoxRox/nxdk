@@ -167,7 +167,12 @@ int r;
     matrix_viewport(m_viewport, 0, 0, width, height, 0.0f, 1.0f);
     matrix_multiply(m_proj, m_proj, (float*)m_viewport);
 
-OPT {
+static int t = 0;
+t++;
+t %= 100;
+if (t > 50) {
+
+pb_print("FFP\n");
 
     float m_identity[4*4];
     matrix_unit(m_identity);
