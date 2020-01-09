@@ -201,7 +201,7 @@ pb_print("FFP\n");
 
     /* Set up all states for hardware vertex pipeline */
     p = pb_begin();
-    p = xgu_set_transform_execution_mode(p, XGU_FIXED, XGU_RANGE_MODE_USER);
+    p = xgu_set_transform_execution_mode(p, XGU_FIXED, XGU_RANGE_MODE_PRIVATE);
     //FIXME: p = xgu_set_fog_enable(p, false);
 
     float m_p[4*4];
