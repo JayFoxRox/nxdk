@@ -164,7 +164,7 @@ int r;
     create_view_screen(m_proj, (float)width/(float)height, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 10000.0f);
 
     /* Create viewport matrix, combine with projection */
-    matrix_viewport(m_viewport, 0, 0, width, height, 0, 65536.0f);
+    matrix_viewport(m_viewport, 0, 0, width, height, 0.0f, 1.0f);
     matrix_multiply(m_proj, m_proj, (float*)m_viewport);
 
 OPT {
@@ -348,12 +348,15 @@ static void matrix_viewport(float out[4][4], float x, float y, float width, floa
 {
     memset(out, 0, 4*4*sizeof(float));
     out[0][0] = width/2.0f;
-    out[1][1] = height/-2.0f;
-    out[2][2] = z_max - z_min;
-    out[3][3] = 1.0f;
     out[3][0] = x + width/2.0f;
+
+    out[1][1] = height/-2.0f;
     out[3][1] = y + height/2.0f;
-    out[3][2] = z_min;
+
+    out[2][2] = (z_max - z_min)*0xFFFF;
+    out[3][2] = z_min*0xFFFF;
+
+    out[3][3] = 1.0f;
 }
 
 /* Load the shader we will render with */
