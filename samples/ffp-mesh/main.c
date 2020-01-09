@@ -224,7 +224,8 @@ pb_print("FFP\n");
     matrix_transpose(mt_mvp, m_mvp);
 //OPT matrix_copy(mt_mvp, m_mvp);
 
-    p = xgu_set_projection_matrix(p, mt_p); //FIXME: Unused in XQEMU
+
+    p = xgu_set_projection_matrix(p, m_identity); //FIXME: Unused in XQEMU
     p = xgu_set_composite_matrix(p, mt_mvp); //FIXME: Always used in XQEMU?
     p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
     p = xgu_set_viewport_scale(p, 1.0f, 1.0f, 1.0f, 1.0f); //FIXME: Ignored?!
