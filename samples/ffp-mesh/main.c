@@ -167,6 +167,11 @@ int r;
     matrix_viewport(m_viewport, 0, 0, width, height, 0.0f, 1.0f);
     matrix_multiply(m_proj, m_proj, (float*)m_viewport);
 
+
+p = pb_begin();
+p = xgu_set_depth_test_enable(p, false);
+pb_end(p);
+
 static int t = 0;
 t++;
 t %= 100;
