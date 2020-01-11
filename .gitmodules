@@ -31,3 +31,6 @@
 [submodule "lib/sdl/SDL_image"]
 	path = lib/sdl/SDL2_image
 	url = https://github.com/SDL-mirror/SDL_image.git
+[submodule "lib/sdl/SDL_mixer"]
+	path = lib/sdl/SDL_mixer
+	url = https://github.com/SDL-mirror/SDL_mixer.git

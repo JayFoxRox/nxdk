@@ -1,0 +1,43 @@
+SDL_MIXER_DIR = $(NXDK_DIR)/lib/sdl/SDL_mixer
+
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/effect_position.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/effects_internal.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/effect_stereoreverse.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/mixer.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/music.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/compat.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/load_aiff.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/load_voc.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_cmd.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_flac.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_fluidsynth.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_mad.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_mikmod.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_modplug.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_mpg123.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_nativemidi.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_ogg.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_opus.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_timidity.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_wav.c
+SDL_MIXER_OBJS = $(addsuffix .obj, $(basename $(SDL_MIXER_SRCS)))
+
+$(NXDK_DIR)/lib/libSDL_mixer.lib: $(SDL_MIXER_OBJS)
+
+CFLAGS += -I$(SDL_MIXER_DIR)/include \
+          -I$(SDL_MIXER_DIR)/src/codecs \
+          -Wno-pragma-pack \
+          -DXBOX
+
+CXXFLAGS += -I$(SDL_MIXER_DIR)/include \
+            -Wno-pragma-pack \
+            -DXBOX
+
+main.exe: $(NXDK_DIR)/lib/libSDL_mixer.lib
+
+CLEANRULES += clean-sdl_mixer
+
+.PHONY: clean-sdl_mixer
+clean-sdl_mixer:
+	$(VE)rm -f $(SDL_mixer_OBJS) \
+	           $(NXDK_DIR)/lib/libSDL_mixer.lib \
