@@ -24,6 +24,9 @@ SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_opus.c
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_timidity.c
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_wav.c
 
+# WAV Support
+CFLAGS += -DMUSIC_WAV
+
 # OGG Support
 CFLAGS += "-DMUSIC_OGG -DOGG_USE_TREMOR -DOGG_HEADER=<ivorbisfile.h>"
 CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1
