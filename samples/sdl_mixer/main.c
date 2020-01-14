@@ -160,7 +160,7 @@ int main(void)
     double loop_start, loop_end, loop_length;
 
     /* Initialize variables */
-    int audio_rate = MIX_DEFAULT_FREQUENCY;
+    int audio_rate = 48000; //MIX_DEFAULT_FREQUENCY;
     Uint16 audio_format = MIX_DEFAULT_FORMAT;
     int audio_channels = MIX_DEFAULT_CHANNELS;
     int audio_buffers = 4096;
