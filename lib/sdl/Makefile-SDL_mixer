@@ -1,3 +1,6 @@
+# Add some fake headers
+CFLAGS += -I$(NXDK_DIR)/lib/sdl/include
+
 SDL_MIXER_DIR = $(NXDK_DIR)/lib/sdl/SDL_mixer
 
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/effect_position.c
@@ -20,12 +23,48 @@ SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_ogg.c
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_opus.c
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_timidity.c
 SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/src/codecs/music_wav.c
+
+# OGG Support
+CFLAGS += "-DMUSIC_OGG -DOGG_USE_TREMOR -DOGG_HEADER=<ivorbisfile.h>"
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1
+
+## vorbisfile
+#FIXME: !!!
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbis-1.3.6/include
+
+## libvorbisdec
+CFLAGS += -DHAVE_ALLOCA -DFLOAT_LOOKUP -DINT_LOOKUP
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/block.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/codebook.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/floor0.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/floor1.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/info.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/mapping0.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/mdct.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/registry.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/res012.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/sharedbook.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/synthesis.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/window.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/vorbisfile.c
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/include
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/lib
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/../libogg-1.3.2/include
+#CFLAGS += -I$(SDL_MIXER_DIR)/external/libvorbisidec-1.2.1/../libogg-1.3.2/android
+
+## libogg
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libogg-1.3.2/src/bitwise.c
+SDL_MIXER_SRCS += $(SDL_MIXER_DIR)/external/libogg-1.3.2/src/framing.c
+CFLAGS += -I$(SDL_MIXER_DIR)/external/libogg-1.3.2/include
+#CFLAGS += -I$(SDL_MIXER_DIR)/external/libogg-1.3.2/android
+
 SDL_MIXER_OBJS = $(addsuffix .obj, $(basename $(SDL_MIXER_SRCS)))
 
 $(NXDK_DIR)/lib/libSDL_mixer.lib: $(SDL_MIXER_OBJS)
 
 CFLAGS += -I$(SDL_MIXER_DIR)/include \
           -I$(SDL_MIXER_DIR)/src/codecs \
+          -I$(SDL_MIXER_DIR)/src \
           -Wno-pragma-pack \
           -DXBOX
 
