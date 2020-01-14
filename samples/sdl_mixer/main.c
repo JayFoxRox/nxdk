@@ -38,7 +38,8 @@
 #include <hal/debug.h>
 
 static const char* songs[] = {
-    "D:\\song.ogg",
+    "D:\\nxdk.wav",
+//    "D:\\song.ogg",
     NULL
 };
 
@@ -238,7 +239,7 @@ int main(void)
         Mix_FreeMusic(music);
         music = NULL;
 
-        i++;
+//        i++;
     }
     CleanUp(0);
 
