@@ -493,7 +493,6 @@ void translate(const char* str)
                     vsh_set_field(vsh_ins, FLD_OUT_MUX, OMUX_ILU);
                 }
                 vsh_set_field(vsh_ins, FLD_OUT_ORB, OUTPUT_C);
-                // TODO: the index needs ajustment?
                 vsh_set_field(vsh_ins, FLD_OUT_ADDRESS, ins.DstReg.Index);
             } else {
                 assert(false);
@@ -538,7 +537,7 @@ void translate(const char* str)
                 } else if (reg.File == PROGRAM_ENV_PARAM) {
                     vsh_set_field(vsh_ins, mux_field[j], PARAM_C);
                     // TODO: the index needs ajustment?
-                    vsh_set_field(vsh_ins, FLD_CONST, reg.Index+96);
+                    vsh_set_field(vsh_ins, FLD_CONST, reg.Index);
                 } else if (reg.File == PROGRAM_INPUT) {
                     vsh_set_field(vsh_ins, mux_field[j], PARAM_V);
                     //TODO: also needs ajustment?
