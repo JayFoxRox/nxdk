@@ -28,3 +28,6 @@
 [submodule "lib/openal-soft/openal-soft"]
 	path = lib/openal/openal-soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "lib/libsndfile/libsndfile"]
+	path = lib/libsndfile/libsndfile
+	url = https://github.com/erikd/libsndfile.git
