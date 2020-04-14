@@ -78,6 +78,7 @@ NXDK_CFLAGS += -Dstrcasecmp=_stricmp
 NXDK_CFLAGS += -Dstrncasecmp=_strnicmp
 
 #FIXME: Move to winapi
+NXDK_CFLAGS += -DDebugBreak\(\)=assert\(0\)
 NXDK_CFLAGS += -DEXCEPTION_CONTINUE_EXECUTION=-1
 NXDK_CFLAGS += -DHMODULE=void*
 NXDK_CFLAGS += -DAPIENTRY=
