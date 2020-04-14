@@ -44,7 +44,7 @@ OPENAL_SOFT_ALC_SRCS = \
     $(OPENAL_SOFT_DIR)/Alc/filters/filter.c \
     $(OPENAL_SOFT_DIR)/Alc/filters/nfc.c \
     $(OPENAL_SOFT_DIR)/Alc/filters/splitter.c \
-    \
+    $(OPENAL_DIR)/helpers.c \
     $(OPENAL_SOFT_DIR)/Alc/hrtf.c \
     $(OPENAL_SOFT_DIR)/Alc/uhjfilter.c \
     $(OPENAL_SOFT_DIR)/Alc/ambdec.c \
@@ -52,8 +52,6 @@ OPENAL_SOFT_ALC_SRCS = \
     $(OPENAL_SOFT_DIR)/Alc/panning.c \
     $(OPENAL_SOFT_DIR)/Alc/mixvoice.c \
     $(OPENAL_SOFT_DIR)/Alc/mixer/mixer_c.c
-
-#$(OPENAL_SOFT_DIR)/Alc/helpers.c \
 
 OPENAL_SOFT_SRCS = \
     $(OPENAL_SOFT_COMMON_SRCS) \
