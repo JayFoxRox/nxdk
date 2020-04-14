@@ -6,10 +6,11 @@
 #define ALIGN(x) __attribute__((aligned(x)))
 
 /* Define a built-in call indicating an aligned data pointer */
-//FIXME: #define ASSUME_ALIGNED(x, y) ${ASSUME_ALIGNED_DECL}
+#define ASSUME_ALIGNED(x, y) __builtin_assume_aligned(x, y)
 
 /* Define if HRTF data is embedded in the library */
-//FIXME: #cmakedefine ALSOFT_EMBED_HRTF_DATA
+//FIXME: Make this optional? These files consume RAM, even if not used
+#define ALSOFT_EMBED_HRTF_DATA
 
 /* Define if we have the sysconf function */
 //FIXME: #cmakedefine HAVE_SYSCONF
