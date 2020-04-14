@@ -25,3 +25,6 @@
 [submodule "lib/libpng/libpng"]
 	path = lib/libpng/libpng
 	url = https://github.com/glennrp/libpng.git
+[submodule "lib/openal/openal-soft"]
+	path = lib/openal/openal-soft
+	url = https://github.com/kcat/openal-soft.git
