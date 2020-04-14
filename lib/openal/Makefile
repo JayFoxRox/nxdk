@@ -57,9 +57,7 @@ OPENAL_SOFT_SRCS = \
     $(OPENAL_SOFT_COMMON_SRCS) \
     $(OPENAL_SOFT_OPENAL_SRCS) \
     $(OPENAL_SOFT_ALC_SRCS) \
-    $(OPENAL_SOFT_DIR)/router/al.c \
-    $(OPENAL_SOFT_DIR)/router/alc.c \
-    $(OPENAL_SOFT_DIR)/router/router.c
+    $(OPENAL_SOFT_DIR)/Alc/mixer/mixer_sse.c
 
 OPENAL_SOFT_OBJS = $(addsuffix .obj, $(basename $(OPENAL_SOFT_SRCS)))
 
