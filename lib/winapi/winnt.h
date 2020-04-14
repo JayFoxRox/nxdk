@@ -4,6 +4,7 @@
 #include <xboxkrnl/xboxdef.h>
 
 typedef LONG HRESULT;
+typedef signed __int64 LONG64, *PLONG64;
 
 typedef CHAR *LPSTR;
 
