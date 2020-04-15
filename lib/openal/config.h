@@ -13,8 +13,8 @@
 /* Define if we have the Solaris backend */
 /* #undef HAVE_SOLARIS */
 
-/* Define if we have the DSound backend */
-/* #undef HAVE_DSOUND */
+/* Define if we have the DSound backend (used for xaudio in nxdk) */
+#define HAVE_DSOUND
 
 /* Define if we have the Windows Multimedia backend */
 /* #undef HAVE_WINMM */
