@@ -50,7 +50,7 @@ static ALuint LoadSound(const char *filename)
     ALuint buffer;
 
     /* Load the WAV */
-    if (SDL_LoadWAV("test.wav", &wav_spec, &wav_buffer, &wav_length) == NULL) {
+    if (SDL_LoadWAV(filename, &wav_spec, &wav_buffer, &wav_length) == NULL) {
         debugPrint("error: Could not open audio in %s: %s\n", filename, SDL_GetError());
         return 0;
     }
@@ -118,14 +118,18 @@ int main(int argc, char **argv)
 
     XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
+    debugPrint("Sample starting\n");
+
     /* Initialize OpenAL. */
-    if(InitAL(&argv, &argc) != 0)
+    if(InitAL() != 0) {
+        Sleep(5000);
         return 1;
+    }
 
     /* Load the sound into a buffer. */
-    buffer = LoadSound("D:\\sound.wav");
-    if(!buffer)
-    {
+    buffer = LoadSound("D:\\nxdk.wav");
+    if(!buffer) {
+        Sleep(5000);
         CloseAL();
         return 1;
     }
@@ -144,7 +148,7 @@ int main(int argc, char **argv)
 
         /* Get the source offset. */
         alGetSourcef(source, AL_SEC_OFFSET, &offset);
-        debugPrint("Offset: %llu ms", (unsigned long long)(offset * 1000ULL));
+        debugPrint("Offset: %llu ms\n", (unsigned long long)(offset * 1000ULL));
         fflush(stdout);
     } while(alGetError() == AL_NO_ERROR && state == AL_PLAYING);
     debugPrint("\n");
@@ -155,5 +159,7 @@ int main(int argc, char **argv)
 
     CloseAL();
 
+    debugPrint("Sample finished\n");
+    Sleep(5000);
     return 0;
 }
