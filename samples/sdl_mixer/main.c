@@ -38,8 +38,8 @@
 #include <hal/debug.h>
 
 static const char* songs[] = {
-    "D:\\nxdk.wav",
-//    "D:\\song.ogg",
+//    "D:\\nxdk.wav",
+    "D:\\song.ogg",
     NULL
 };
 
@@ -165,7 +165,7 @@ int main(void)
     int audio_channels = MIX_DEFAULT_CHANNELS;
     int audio_buffers = 4096;
     int audio_volume = MIX_MAX_VOLUME;
-    int looping = 0;
+    int looping = 1;
 
     /* Set up Xbox video */
     XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
