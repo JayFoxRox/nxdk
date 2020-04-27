@@ -200,7 +200,9 @@ int main(void)
         /* Load the requested music file */
         debugPrint("Opening %s\n", songs[i]);
 
-        //FIXME: This doesn't work: SDL_RWFromFile(songs[i], "rb");
+#if 1
+        SDL_RWops *rw = SDL_RWFromFile(songs[i], "rb");
+#else
         FILE* f = fopen(songs[i], "rb");
         fseek(f, 0, SEEK_END);
         size_t size = ftell(f);
@@ -209,6 +211,7 @@ int main(void)
         fread(buff, 1, size, f);
         fclose(f);
         SDL_RWops *rw = SDL_RWFromMem(buff, size);
+#endif
 
         if (rw == NULL) {
             debugPrint("Couldn't open %s: %s\n",
