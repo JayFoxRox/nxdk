@@ -25,3 +25,6 @@
 [submodule "lib/libpng/libpng"]
 	path = lib/libpng/libpng
 	url = https://github.com/glennrp/libpng.git
+[submodule "lib/sdl/SDL_mixer"]
+	path = lib/sdl/SDL_mixer
+	url = https://github.com/SDL-mirror/SDL_mixer.git
