@@ -159,10 +159,17 @@ int main(void)
 {
     double loop_start, loop_end, loop_length;
 
+#if defined(NXDK)
+    /* Initialize variables (to avoid resampling for Xbox hardware) */
+    int audio_rate = 48000;
+    Uint16 audio_format = AUDIO_S16LSB;
+    int audio_channels = 2;
+#else
     /* Initialize variables */
-    int audio_rate = 48000; //MIX_DEFAULT_FREQUENCY;
+    int audio_rate = MIX_DEFAULT_FREQUENCY;
     Uint16 audio_format = MIX_DEFAULT_FORMAT;
     int audio_channels = MIX_DEFAULT_CHANNELS;
+#endif
     int audio_buffers = 4096;
     int audio_volume = MIX_MAX_VOLUME;
     int looping = 1;
