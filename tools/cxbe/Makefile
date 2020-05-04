@@ -1,9 +1,24 @@
-INCLUDES := $(wildcard *.h)
-SRCS := $(wildcard *.cpp)
+INCLUDES := \
+  Common.h \
+  Cxbx.h \
+  Error.h \
+  Exe.h \
+  Xbe.h
+SRCS := \
+  Common.cpp \
+  Error.cpp \
+  Exe.cpp \
+  OpenXDK.cpp \
+  Xbe.cpp
 
-cxbe: $(SRCS) $(INCLUDES)
-	$(CXX) -o '$@' $(SRCS)
+all: cxbe cdxt
+
+cxbe: Cxbe.cpp $(SRCS) $(INCLUDES)
+	$(CXX) -o '$@' $^
+
+cdxt: Cdxt.cpp $(SRCS) $(INCLUDES)
+	$(CXX) -o '$@' $^
 
 .PHONY: clean
 clean:
-	rm -f cxbe
+	rm -f cxbe cdxt
