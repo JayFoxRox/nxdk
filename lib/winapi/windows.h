@@ -13,5 +13,6 @@
 #include <sysinfoapi.h>
 #include <winbase.h>
 #include <winerror.h>
+#include <winnt.h>
 
 #endif
