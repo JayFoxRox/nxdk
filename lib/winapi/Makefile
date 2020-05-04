@@ -1,4 +1,5 @@
 WINAPI_SRCS := \
+	$(NXDK_DIR)/lib/winapi/badptr.c \
 	$(NXDK_DIR)/lib/winapi/debug.c \
 	$(NXDK_DIR)/lib/winapi/errhandlingapi.c \
 	$(NXDK_DIR)/lib/winapi/error.c \
@@ -9,6 +10,7 @@ WINAPI_SRCS := \
 	$(NXDK_DIR)/lib/winapi/handleapi.c \
 	$(NXDK_DIR)/lib/winapi/memory.c \
 	$(NXDK_DIR)/lib/winapi/profiling.c \
+	$(NXDK_DIR)/lib/winapi/shlobj_core.c \
 	$(NXDK_DIR)/lib/winapi/sync.c \
 	$(NXDK_DIR)/lib/winapi/sysinfo.c \
 	$(NXDK_DIR)/lib/winapi/thread.c \
