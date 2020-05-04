@@ -31,3 +31,6 @@
 [submodule "lib/sdl/SDL_image"]
 	path = lib/sdl/SDL2_image
 	url = https://github.com/SDL-mirror/SDL_image.git
+[submodule "lib/openal/openal-soft"]
+	path = lib/openal/openal-soft
+	url = https://github.com/kcat/openal-soft.git
