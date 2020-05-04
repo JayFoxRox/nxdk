@@ -34,7 +34,6 @@
 
 #include "AL/al.h"
 #include "AL/alc.h"
-#include "AL/alext.h"
 
 #include "alhelpers.h"
 
@@ -65,12 +64,14 @@ int InitAL(void)
         return 1;
     }
 
+#if 0
     name = NULL;
     if(alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT"))
         name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
     if(!name || alcGetError(device) != AL_NO_ERROR)
         name = alcGetString(device, ALC_DEVICE_SPECIFIER);
     debugPrint("Opened \"%s\"\n", name);
+#endif
 
     return 0;
 }
