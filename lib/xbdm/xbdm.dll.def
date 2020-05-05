@@ -1,0 +1,18 @@
+; Copyright (C) 2019 Jannik Vogel
+; This specific file is licensed under the CC0 1.0.
+; Look here for details: https://creativecommons.org/publicdomain/zero/1.0/
+
+LIBRARY xbdm.dll
+
+EXPORTS
+    DmClosePerformanceCounter@4              @   7 NONAME
+
+    DmNotify@12                              @  24 NONAME
+    DmOpenNotificationSession@8              @  25 NONAME
+    DmOpenPerformanceCounter@8               @  26 NONAME
+    DmQueryPerformanceCounterHandle@12       @  27 NONAME
+
+    DmRegisterCommandProcessor@8             @  30 NONAME
+
+    DmSendNotificationString@4               @  36 NONAME
+

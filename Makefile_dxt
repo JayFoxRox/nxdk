@@ -1,0 +1,31 @@
+ifeq ($(DXT_TITLE),)
+DXT_TITLE = nxdk_app
+endif
+
+CDXT         = $(NXDK_DIR)/tools/cxbe/cdxt
+
+LDFLAGS += $(NXDK_DIR)/lib/xbdm/libxbdm.lib
+
+# Try to reduce size
+CFLAGS += -Os -fno-stack-protector -fomit-frame-pointer -ffunction-sections -fdata-sections
+
+
+# Hack because nxdk doesn't handle overwriting the entry point.
+# To work around this, we add it as stacksize, which is appended to LDFLAGS.
+NXDK_STACKSIZE=65536 -entry:DxtEntry
+
+
+# This is the first Makefile target, as we try to avoid building an XBE (which would otherwise be the first target).
+# A bit of a hack because bin/ does not exist.
+#
+#FIXME: The proper solution is to run a tool which moves sections in the EXE or XBE around
+bin/$(DXT_TITLE).dxt: main.exe
+	@echo "[ BUILD    ] $@"
+	@mkdir -p bin/
+	$(CDXT) -OUT:$@ $<
+	@llvm-strip --strip-unneeded "$@"
+
+#FIXME: objcopy alone isn't enough; some sections will still shift content around; we merge those
+LDFLAGS += -merge:.tls=.text -merge:.rdata=.data -align:32
+
+include $(NXDK_DIR)/Makefile
