@@ -81,6 +81,8 @@ int main(void)
         return 1;
     }
 
+Sleep(100);
+
     pb_show_front_screen();
 
     /* Basic setup */
