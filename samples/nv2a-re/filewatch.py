@@ -20,9 +20,17 @@ def handle_modification(path):
   for registered_file in registered_files:
     print("  checking %s" % registered_file)
 
-class MyHandler(watchdog.events.FileSystemEventHandler):
-  def on_any_event(self, event):
-    print(f'event type: {event.event_type}  path : {event.src_path}')
-    handle_modification(event.src_path)
-    if isinstance(event, watchdog.events.FileMovedEvent):
-      handle_modification(event.dest_path)
+def start():
+
+  class MyHandler(watchdog.events.FileSystemEventHandler):
+    def on_any_event(self, event):
+      print(f'event type: {event.event_type}  path : {event.src_path}')
+      handle_modification(event.src_path)
+      if isinstance(event, watchdog.events.FileMovedEvent):
+        handle_modification(event.dest_path)
+
+  event_handler = MyHandler()
+  observer = Observer()
+  observer.schedule(event_handler, path=".", recursive=False)
+  observer.start()
+

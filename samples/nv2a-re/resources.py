@@ -70,22 +70,6 @@ class ContiguousResourceFromFile(BaseContiguousResource):
   def _size(self):
     return self._resource._size
 
-class CallbackResource():
-  def __init__(self, task, callback, args):
-    self.callback = callback
-    self.args = args
-  def begin(self):
-    pass
-  def end(self):
-    pass
-
-class CallbackResourceFromFiles():
-  def __init__(self, paths, callback, args):
-    self.resource = super.CallbackResource(callback, args)
-  def begin(self):
-    self.handler = register_handler(paths, self.resource.callback, args)
-  def end(self):
-    unregister_handler(self.handler)
 
 class BaseTask():
 
