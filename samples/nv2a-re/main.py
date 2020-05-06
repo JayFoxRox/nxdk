@@ -8,6 +8,7 @@ import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import watchdog.events
+import PIL.Image
 
 dma_state = 0xFD003228
 dma_put_addr = 0xFD003240
@@ -76,6 +77,21 @@ def do_task():
   print("Updating output %s!" % datetime.datetime.now())
   print()
 
+  # Generate fragment program
+  process = subprocess.Popen([os.environ['NXDK_DIR'] + "/tools/fp20compiler/fp20compiler", "fp.fp"], stdout=subprocess.PIPE)
+  stdoutdata, stderrdata = process.communicate()
+  print()
+
+  # Check fp20compiler output
+  print(process.returncode)
+  if process.returncode:
+    print("fp20compiler failed!")
+    return
+
+  # Output fp20compiler code
+  print(">>>>>", stdoutdata)
+  open("fp.inl", "wb").write(stdoutdata)
+
   # Run compiler
   process = subprocess.Popen(["clang","generate_pb.c","-I./env","-I./../../lib/","-g","-O0","-o","generate_pb"])
   stdoutdata, stderrdata = process.communicate()
@@ -87,10 +103,20 @@ def do_task():
     print("Compiler generator failed!")
     return
 
-  #FIXME: Upload resources?
+  # Load an image
+  image = PIL.Image.open("tex0.png")
+  image = image.convert("RGBA")
+  assert(image.width == 64)
+  assert(image.height == 64)
+  tex = image.tobytes()
+  assert(len(tex) == (64 * 64 * 4))
+
+  # Upload resources?
+  tex_addr = xbox.ke.MmAllocateContiguousMemory(64 * 64 * 4)
+  xbox.write(tex_addr, tex)
 
   # Run compiled tool
-  process = subprocess.Popen(["./generate_pb"])
+  process = subprocess.Popen(["./generate_pb", "%d" % tex_addr])
   stdoutdata, stderrdata = process.communicate()
   print()
 
@@ -98,6 +124,8 @@ def do_task():
   print(process.returncode)
   if process.returncode:
     print("Generating pushbuffer failed!")
+    #FIXME: Cleanup elsewhere!
+    xbox.ke.MmFreeContiguousMemory(tex_addr)
     return
 
   # Load pushbuffer
@@ -136,6 +164,7 @@ def do_task():
 
   # Free pushbuffer
   xbox.ke.MmFreeContiguousMemory(pb_addr)
+  xbox.ke.MmFreeContiguousMemory(tex_addr)
 
   # Report success
   print("Success!")

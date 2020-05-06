@@ -40,6 +40,18 @@ void pb_push(uint32_t *p, DWORD command, DWORD nparam)
     pb_push_to(SUBCH_3D,p,command,nparam);
 }
 
+uint32_t *pb_push1_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1)
+{
+    pb_push_to(subchannel,p,command,1);
+    *(p+1)=param1;
+    return p+2;
+}
+
+uint32_t *pb_push1(uint32_t *p, DWORD command, DWORD param1)
+{
+    return pb_push1_to(SUBCH_3D,p,command,param1);
+}
+
 // User code
 
 #define inline // WTF?! linker complains without this [for XGU/XGUX]
@@ -122,11 +134,12 @@ static void generate_clears() {
   pb_end(p);
 }
 
-static void generate_triangles(uint32_t tex_addr) {
+static void generate_triangles() {
   uint32_t* p;
 
   p = pb_begin();
 
+#if 0
   p = xgu_begin(p, XGU_TRIANGLES);
 
   /* Background triangle 1 */
@@ -140,19 +153,23 @@ static void generate_triangles(uint32_t tex_addr) {
   p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex3f(p,  1.0f, -1.0f,  1.0f);
 
   p = xgu_end(p);
+#endif
 
   /* Enable texture */
-  
+  //FIXME: !!!
+  float w = 64.0f;
+  float h = 64.0f;
 
   p = xgu_begin(p, XGU_TRIANGLES);
 
   /* Foreground triangle */
-  p = xgux_set_texcoord3f(p, 0, 0.5f, 0.0f, 0.0f)
-  p = xgux_set_color3f(p, 1.0f, 0.0f, 0.0f); p = xgu_vertex3f(p, -1.0f, -1.0f,  1.0f);
-  p = xgux_set_texcoord3f(p, 0, 0.0f, 1.0f, 0.0f)
-  p = xgux_set_color3f(p, 0.0f, 1.0f, 0.0f); p = xgu_vertex3f(p,  0.0f,  1.0f,  1.0f);
-  p = xgux_set_texcoord3f(p, 0, 1.0f, 1.0f, 0.0f)
-  p = xgux_set_color3f(p, 0.0f, 0.0f, 1.0f); p = xgu_vertex3f(p,  1.0f, -1.0f,  1.0f);
+  int i = 1; //FIXME: Texture index in xgux_set_texcoord3f is bad!
+  p = xgux_set_texcoord3f(p, i, 0.5f * w, 0.0f * h, 1.0f);
+  p = xgux_set_color3f(p, 1.0f, 1.0f, 1.0f); p = xgu_vertex3f(p, -1.0f, -1.0f,  1.0f);
+  p = xgux_set_texcoord3f(p, i, 0.0f * w, 1.0f * h, 1.0f);
+  p = xgux_set_color3f(p, 1.0f, 1.0f, 1.0f); p = xgu_vertex3f(p,  0.0f,  1.0f,  1.0f);
+  p = xgux_set_texcoord3f(p, i, 1.0f * w, 1.0f * h, 1.0f);
+  p = xgux_set_color3f(p, 1.0f, 1.0f, 1.0f); p = xgu_vertex3f(p,  1.0f, -1.0f,  1.0f);
 
   p = xgu_end(p);
   pb_end(p);
@@ -167,9 +184,45 @@ int main(int argc, char* argv[]) {
 
   /* Setup texture */
   {
+    unsigned int texture_index = 0;
+    uint32_t tex_addr = atoll(argv[1]);
     uint32_t* p = pb_begin();
-    pb_push(p++, NV097_WAIT_FOR_IDLE, 1);
-    *p++ = 0;
+
+    bool enable = true;
+    uint16_t min_lod = 0;
+    uint16_t max_lod = 0;
+    bool r_signed = false;
+    bool g_signed = false;
+    bool b_signed = false;
+    bool a_signed = false;
+    uint16_t lod_bias = 0;
+    uint8_t filter_min = 1;
+    uint8_t filter_mag = 1;
+    uint8_t context_dma = 0;
+    bool cubemap_enable = 0;
+    XguBorderSrc border_src = XGU_SOURCE_TEXTURE;
+    uint8_t dimensionality = 2;
+    XguTexFormatColor format = XGU_TEXTURE_FORMAT_A8B8G8R8;
+    uint8_t mipmap_levels = 1;
+    uint8_t u_size = 6;
+    uint8_t v_size = 6;
+    uint8_t p_size = 0;
+
+    p = xgu_set_texture_offset(p, texture_index, tex_addr & 0x7FFFFFFF);
+    p = xgu_set_texture_format(p, texture_index, context_dma, cubemap_enable, border_src, dimensionality, format, mipmap_levels, u_size, v_size, p_size);
+    //p = xgu_set_texture_address(p, texture_index, );
+    p = xgu_set_texture_control0(p, texture_index, enable, min_lod, max_lod);
+    p = xgu_set_texture_control1(p, texture_index, 64 * 4);
+    p = xgu_set_texture_filter(p, texture_index, lod_bias, filter_min, filter_mag, r_signed, b_signed, g_signed, a_signed);
+    p = xgu_set_texture_image_rect(p, texture_index, 64, 64);    
+
+    pb_end(p);
+  }
+
+  /* Setup fragment program */
+  {
+    uint32_t* p = pb_begin();
+#include "fp.inl"
     pb_end(p);
   }
 
