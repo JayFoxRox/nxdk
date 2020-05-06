@@ -1,74 +1,50 @@
 #!/usr/bin/env python3
 
-from xboxpy import *
-
 import os
 import datetime
-import subprocess
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import watchdog.events
-import PIL.Image
 
-dma_state = 0xFD003228
-dma_put_addr = 0xFD003240
-dma_get_addr = 0xFD003244
-dma_subroutine = 0xFD00324C
+import globals
 
-put_addr = 0xFD003210
-put_state = 0xFD003220
-get_addr = 0xFD003270
-get_state = 0xFD003250
+from xbox import *
 
-#FIXME: This needs to be more granular:
-# if C code changes: recompile
-# if tool changes: rerun
-# if data changes: redraw
-# if python script changes: rerun
-watchlist = ["generate_pb.c"]
+xbox = Xbox(("127.0.0.1", 9269))
 
-# Hack to pretend we have a better API in xboxpy
-class Xbox:
-  def __init__(self):
-    self.read_u32 = read_u32
-    self.read = read
-    self.write = write
-    self.write_u32 = write_u32
-    self.ke = ke
-xbox = Xbox()
+from nv2a_helper import *
+from filewatch import *
+from resources import *
+from commands import *
 
-def wait_until_pusher_idle():
-  while(xbox.read_u32(put_state) & (1 << 4)):
-    pass
+globals.BASE_PATH = "samples/textured_triangle"
 
-def pause_fifo_pusher():
-  s1 = xbox.read_u32(put_state)
-  xbox.write_u32(put_state, s1 & 0xFFFFFFFE)
-
-def resume_fifo_pusher():
-  s2 = xbox.read_u32(put_state)
-  xbox.write_u32(put_state, (s2 & 0xFFFFFFFE) | 1) # Recover pusher state
-
-def wait_until_puller_idle():
-  while(xbox.read_u32(get_state) & (1 << 4)):
-    pass
-
-def pause_fifo_puller():
-  s1 = xbox.read_u32(get_state)
-  xbox.write_u32(get_state, s1 & 0xFFFFFFFE)
-
-def resume_fifo_puller():
-  s2 = xbox.read_u32(get_state)
-  xbox.write_u32(get_state, (s2 & 0xFFFFFFFE) | 1) # Recover pusher state
 
 def clear_output():
   os.system('cls' if os.name == 'nt' else 'clear')
 
-def show_xbox_front():
-  req = interface.if_nxdk_rdt.Request()
-  req.type = interface.if_nxdk_rdt.Request.SHOW_FRONT_SCREEN
-  return interface.if_nxdk_rdt._send_simple_request(req)
+def run_pushbuffer(pb_addr):
+  # Pause pushbuffer
+  pause_fifo_pusher(xbox)
+  pause_fifo_puller(xbox)
 
+  # Redirect Xbox to pushbuffer
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+  xbox.write_u32(dma_get_addr, (pb_addr.address() +              0) & 0x7FFFFFFF)
+  xbox.write_u32(dma_put_addr, (pb_addr.address() + pb_addr.size()) & 0x7FFFFFFF)
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+
+  # Resume pushbuffer
+  resume_fifo_pusher(xbox)
+  resume_fifo_puller(xbox)
+
+  # Wait for pushbuffer to finish
+  wait_until_pusher_idle(xbox)
+  wait_until_puller_idle(xbox)
+
+  # Pause pushbuffer
+  pause_fifo_pusher(xbox)
+  pause_fifo_puller(xbox)
+
+  # Check if we reached our goal
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
 
 def do_task():
 
@@ -77,131 +53,60 @@ def do_task():
   print("Updating output %s!" % datetime.datetime.now())
   print()
 
+  # Start display
+  show_xbox_backbuffer(xbox)
+
   # Generate fragment program
-  process = subprocess.Popen([os.environ['NXDK_DIR'] + "/tools/fp20compiler/fp20compiler", "fp.fp"], stdout=subprocess.PIPE)
-  stdoutdata, stderrdata = process.communicate()
-  print()
+  compile_fp("tmp/fp.inl", "fp.fp")
 
-  # Check fp20compiler output
-  print(process.returncode)
-  if process.returncode:
-    print("fp20compiler failed!")
-    return
+  # Generate pushbuffer generator
+  compile_c("tmp/pb", "pb.c")
 
-  # Output fp20compiler code
-  print(">>>>>", stdoutdata)
-  open("fp.inl", "wb").write(stdoutdata)
+  tex_addrs = [None] * 4
+  for i in range(4):
 
-  # Run compiler
-  process = subprocess.Popen(["clang","generate_pb.c","-I./env","-I./../../lib/","-g","-O0","-o","generate_pb"])
-  stdoutdata, stderrdata = process.communicate()
-  print()
+    try:
+      convert_image("tex%d.png" % i, texture_A8R8G8B8, "tmp/tex%d.bin" % i)
+      tex_addrs[i] = ContiguousResourceFromFile(xbox, "tmp/tex%d.bin" % i)
+      #assert(tex_addrs[i].width() == 64)
+      #assert(tex_addrs[i].height() == 64)
+      assert(tex_addrs[i].size() == (64 * 64 * 4))
+      tex_addrs[i].begin()
+    except:
+      continue
 
-  # Check compiler output
-  print(process.returncode)
-  if process.returncode:
-    print("Compiler generator failed!")
-    return
+  # Run pushbuffer generator
+  args = [
+    tex_addrs[0],
+    tex_addrs[1],
+    tex_addrs[2],
+    tex_addrs[3],
+  ]
+  run("tmp/pb", "tmp/pb.bin", *args)
 
-  # Load an image
-  image = PIL.Image.open("tex0.png")
-  image = image.convert("RGBA")
-  assert(image.width == 64)
-  assert(image.height == 64)
-  tex = image.tobytes()
-  assert(len(tex) == (64 * 64 * 4))
+  # Load generated pushbuffer
+  pb_addr = ContiguousResourceFromFile(xbox, "tmp/pb.bin")
+  pb_addr.begin()
+  print("pb at 0x%08X" % pb_addr.address())
 
-  # Upload resources?
-  tex_addr = xbox.ke.MmAllocateContiguousMemory(64 * 64 * 4)
-  xbox.write(tex_addr, tex)
-
-  # Run compiled tool
-  process = subprocess.Popen(["./generate_pb", "%d" % tex_addr])
-  stdoutdata, stderrdata = process.communicate()
-  print()
-
-  # Check tool output
-  print(process.returncode)
-  if process.returncode:
-    print("Generating pushbuffer failed!")
-    #FIXME: Cleanup elsewhere!
-    xbox.ke.MmFreeContiguousMemory(tex_addr)
-    return
-
-  # Load pushbuffer
-  pb = open("pb.bin", "rb").read()
-  assert(len(pb) % 4 == 0)
-
-  #FIXME: Upload new pushbuffer
-  pb_addr = xbox.ke.MmAllocateContiguousMemory(len(pb))
-  xbox.write(pb_addr, pb)
-  print("pb at 0x%08X" % pb_addr)
-
-  # Pause pushbuffer
-  pause_fifo_pusher()
-  pause_fifo_puller()
-
-  # Redirect Xbox to pushbuffer
-  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
-  xbox.write_u32(dma_get_addr, (pb_addr +       0) & 0x7FFFFFFF)
-  xbox.write_u32(dma_put_addr, (pb_addr + len(pb)) & 0x7FFFFFFF)
-  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
-
-  # Resume pushbuffer
-  resume_fifo_pusher()
-  resume_fifo_puller()
-
-  # Wait for pushbuffer to finish
-  wait_until_pusher_idle()
-  wait_until_puller_idle()
-
-  # Pause pushbuffer
-  pause_fifo_pusher()
-  pause_fifo_puller()
-
-  # Check if we reached our goal
-  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+  run_pushbuffer(pb_addr)
 
   # Free pushbuffer
-  xbox.ke.MmFreeContiguousMemory(pb_addr)
-  xbox.ke.MmFreeContiguousMemory(tex_addr)
+  pb_addr.end()
+  for tex_addr in tex_addrs:
+    if tex_addr != None:
+      tex_addr.end()
 
   # Report success
   print("Success!")
 
 
-def handle_modification(path):
-  print("modification in %s" % path)
-
-class MyHandler(watchdog.events.FileSystemEventHandler):
-  def on_any_event(self, event):
-    print(f'event type: {event.event_type}  path : {event.src_path}')
-    handle_modification(event.src_path)
-    if isinstance(event, watchdog.events.FileMovedEvent):
-      handle_modification(event.dest_path)
-
-
 if __name__ == "__main__":
-
-  # Get backbuffer and display it
-  if False:
-    #FIXME: Does not work in XQEMU
-    color_offset = xbox.read_u32(0xFD400828)
-    depth_offset = xbox.read_u32(0xFD40082C)
-    color_base = xbox.read_u32(0xFD400840)
-    depth_base = xbox.read_u32(0xFD400844)
-    print("color is at 0x%08X+0x%08X" % (color_base, color_offset))
-    xbox.write_u32(0xFD600800, color_base + color_offset)
-  else:
-    # Get to a fixed address and advance to next buffer
-    show_xbox_front()
-    fb_addr = xbox.read_u32(0xFD600800)
-    print("fb was at 0x%08X" % fb_addr)
-    xbox.write_u32(0xFD600800, fb_addr + 1 * 640 * 480 * 4)
 
   # Run task
   do_task()
 
+  # Start filewatch.py stuff
   event_handler = MyHandler()
   observer = Observer()
   observer.schedule(event_handler, path=".", recursive=False)

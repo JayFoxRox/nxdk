@@ -4,53 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// pbkit.c
-
-#include <assert.h>
-
 #include "pbkit/pbkit.h"
 
 static FILE* f = NULL;
-static uint32_t* cp = NULL;
-static const size_t pb_size = 1 * 1024 * 1024;
 
-uint32_t* pb_begin() {
-  assert(cp == NULL);
-  cp = malloc(pb_size);
-  return cp;
-}
-void pb_end(uint32_t* p) {
-  size_t size = (uintptr_t)p - (uintptr_t)cp;
-  assert(size <= pb_size);
-  fwrite(cp, size, 1, f);
-  free(cp);
-  cp = NULL;
-}
- 
-
-#define EncodeMethod(subchannel,command,nparam) ((nparam<<18)+(subchannel<<13)+command)
-
-void pb_push_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam)
-{
-    *(p+0)=EncodeMethod(subchannel,command,nparam);
+void _pb_emit(void* data, size_t size) {
+  fwrite(data, size, 1, f);
 }
 
-void pb_push(uint32_t *p, DWORD command, DWORD nparam)
-{
-    pb_push_to(SUBCH_3D,p,command,nparam);
-}
-
-uint32_t *pb_push1_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1)
-{
-    pb_push_to(subchannel,p,command,1);
-    *(p+1)=param1;
-    return p+2;
-}
-
-uint32_t *pb_push1(uint32_t *p, DWORD command, DWORD param1)
-{
-    return pb_push1_to(SUBCH_3D,p,command,param1);
-}
 
 // User code
 
@@ -176,7 +137,7 @@ static void generate_triangles() {
 }
 
 int main(int argc, char* argv[]) {
-  f = fopen("pb.bin", "wb");
+  f = fopen(argv[1], "wb");
   assert(f != NULL);
 
   generate_reset();
@@ -185,7 +146,7 @@ int main(int argc, char* argv[]) {
   /* Setup texture */
   {
     unsigned int texture_index = 0;
-    uint32_t tex_addr = atoll(argv[1]);
+    uint32_t tex_addr = atoll(argv[2]);
     uint32_t* p = pb_begin();
 
     bool enable = true;
@@ -222,7 +183,7 @@ int main(int argc, char* argv[]) {
   /* Setup fragment program */
   {
     uint32_t* p = pb_begin();
-#include "fp.inl"
+#include "tmp/fp.inl"
     pb_end(p);
   }
 
