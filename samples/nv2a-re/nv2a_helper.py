@@ -56,3 +56,29 @@ def show_xbox_backbuffer(xbox):
     print("fb was at 0x%08X" % fb_addr)
     xbox.write_u32(0xFD600800, fb_addr + 1 * 640 * 480 * 4)
 
+def run_pushbuffer(xbox, pb_addr):
+  # Pause pushbuffer
+  pause_fifo_pusher(xbox)
+  pause_fifo_puller(xbox)
+
+  # Redirect Xbox to pushbuffer
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+  xbox.write_u32(dma_get_addr, (pb_addr.address() +              0) & 0x7FFFFFFF)
+  xbox.write_u32(dma_put_addr, (pb_addr.address() + pb_addr.size()) & 0x7FFFFFFF)
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+
+  # Resume pushbuffer
+  resume_fifo_pusher(xbox)
+  resume_fifo_puller(xbox)
+
+  # Wait for pushbuffer to finish
+  wait_until_pusher_idle(xbox)
+  wait_until_puller_idle(xbox)
+
+  # Pause pushbuffer
+  pause_fifo_pusher(xbox)
+  pause_fifo_puller(xbox)
+
+  # Check if we reached our goal
+  print("Xbox was at 0x%08X / 0x%08X" % (xbox.read_u32(dma_get_addr), xbox.read_u32(dma_put_addr)))
+
