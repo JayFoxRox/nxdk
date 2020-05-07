@@ -8,9 +8,6 @@ import datetime
 import globals
 
 from xbox import *
-
-xbox = Xbox(("127.0.0.1", 9269))
-
 from nv2a_helper import *
 from filewatch import *
 from resources import *
@@ -25,16 +22,30 @@ def clear_output():
 
 if __name__ == "__main__":
 
-  task_code = open(globals.BASE_PATH + "/ugly_task.py").read()
-  exec(task_code)
 
-
-  # Create task
-  task = Task(xbox)
+  xbox_list = []
+  for arg in sys.argv[2:]:
+    host = arg
+    port = 9269 #FIXME: Also accept port from arg
+    print("Connecting to %s:%d" % (host, port))
+    xbox_list += [Xbox((host, port))]
 
   #FIXME: Start filewatch.py stuff?
 
+  task_code = open(globals.BASE_PATH + "/ugly_task.py").read()
+  exec(task_code)
+
+  # Create task
+  for xbox in xbox_list:
+    task = Task(xbox)
+    task.begin()
+
   # Run forever
   while True:
-    task.do()
+    print("Doing task")
+    for xbox in xbox_list:
+      task.do()
     time.sleep(1.0)
+
+  for xbox in xbox_list:
+    task.end()

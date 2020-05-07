@@ -168,14 +168,17 @@ int main(int argc, char* argv[]) {
     uint8_t u_size = 6;
     uint8_t v_size = 6;
     uint8_t p_size = 0;
+    unsigned int width = 64;
+    unsigned int height = 64;
+    unsigned int pitch = 64 * 4;
 
     p = xgu_set_texture_offset(p, texture_index, tex_addr & 0x7FFFFFFF);
     p = xgu_set_texture_format(p, texture_index, context_dma, cubemap_enable, border_src, dimensionality, format, mipmap_levels, u_size, v_size, p_size);
     //p = xgu_set_texture_address(p, texture_index, );
     p = xgu_set_texture_control0(p, texture_index, enable, min_lod, max_lod);
-    p = xgu_set_texture_control1(p, texture_index, 64 * 4);
+    p = xgu_set_texture_control1(p, texture_index, pitch);
     p = xgu_set_texture_filter(p, texture_index, lod_bias, filter_min, filter_mag, r_signed, b_signed, g_signed, a_signed);
-    p = xgu_set_texture_image_rect(p, texture_index, 64, 64);    
+    p = xgu_set_texture_image_rect(p, texture_index, width, height);    
 
     pb_end(p);
   }
