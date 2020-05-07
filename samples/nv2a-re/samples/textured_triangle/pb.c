@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "pbkit/pbkit.h"
 
@@ -85,7 +86,10 @@ static void generate_clears() {
   p = xgu_set_clear_rect_vertical(p, 0, 480);
   p = xgu_clear_surface(p, XGU_CLEAR_STENCIL | XGU_CLEAR_Z | XGU_CLEAR_COLOR);
 
-  for(int i = 0; i < 10; i++) {
+
+
+  srand(time(NULL));
+  for(int i = 0; i < rand() % 30; i++) {
     p = xgu_set_color_clear_value(p, 0xFF00FF00);
     p = xgu_set_clear_rect_horizontal(p, 64 + i * 30, 64 + i * 30 + 20);
     p = xgu_set_clear_rect_vertical(p, 64, 64 + 20);
