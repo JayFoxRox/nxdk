@@ -71,11 +71,13 @@ static void generate_reset() {
 
   /* Set up all states for hardware vertex pipeline */
   p = pb_begin();
-  p = xgu_set_transform_execution_mode(p, XGU_FIXED, XGU_RANGE_MODE_USER);
+  p = xgu_set_transform_execution_mode(p, XGU_FIXED, XGU_RANGE_MODE_PRIVATE);
   //FIXME: p = xgu_set_fog_enable(p, false);
   p = xgu_set_projection_matrix(p, m_identity); //FIXME: Unused in XQEMU
   p = xgu_set_composite_matrix(p, m_identity); //FIXME: Always used in XQEMU?
-  p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
+  p = xgu_set_viewport_offset(p, 320.0f, 240.0f, 0.0f, 0.0f);
+  p = xgu_set_clip_min(p, (float)0x000000);
+  p = xgu_set_clip_max(p, (float)0xFFFFFF);
   p = xgu_set_viewport_scale(p, 1.0f, 1.0f, 1.0f, 0.0f); //FIXME: Ignored?!
   pb_end(p);
 #endif
@@ -141,10 +143,11 @@ static void generate_triangles() {
 #endif
 
 #if 1
+  float s = 1.0f;
   p = xgu_begin(p, XGU_TRIANGLES);
-  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p,  0.0f, -100.0f,  0.5f, 1.0f);
-  p = xgux_set_color3f(p, 0.0f, 0.0f, 0.0f); p = xgu_vertex4f(p, -100.0f, 100.0f,  0.5f, 1.0f);
-  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p, 100.0f, 100.0f,  0.5f, 1.0f);
+  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p,    0.0f * s, -100.0f * s, 0.5f, 1.0f);
+  p = xgux_set_color3f(p, 0.0f, 0.0f, 0.0f); p = xgu_vertex4f(p, -100.0f * s,  100.0f * s, 0.5f, 1.0f);
+  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p,  100.0f * s,  100.0f * s, 0.5f, 1.0f);
   p = xgu_end(p);
 #endif
 
