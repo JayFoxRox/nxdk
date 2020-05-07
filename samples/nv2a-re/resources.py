@@ -26,7 +26,7 @@ class ContiguousResourceFromBytes(BaseContiguousResource):
   def _begin(self, new_data):
     new_size = len(new_data)
     #FIXME: Only relocate if old memory too small or non-existing
-    self._memory = self._xbox.ke.MmAllocateContiguousMemory(new_size)
+    self._memory = self._xbox.ke.MmAllocateContiguousMemoryEx(new_size, 0x00000000, 0x7FFFFFFF, 0x1000, self._xbox.ke.PAGE_READWRITE | self._xbox.ke.PAGE_NOCACHE)
     if (self._memory == 0):
       self._memory = None
       assert(False)
