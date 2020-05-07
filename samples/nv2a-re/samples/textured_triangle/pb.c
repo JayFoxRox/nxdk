@@ -34,12 +34,15 @@ static void generate_reset() {
       0.0f, 0.0f, 0.0f, 1.0f
   };
 
+#if 1
   /* Set up some default GPU state (should be done in xgux_init maybe? currently partially done in pb_init) */
   p = pb_begin();
 
   //FIXME: p = xgu_set_skinning(p, XGU_SKINNING_OFF);
   //FIXME: p = xgu_set_normalization(p, false);
+#if 1
   p = xgu_set_lighting_enable(p, false);
+#endif
 
   for(int i = 0; i < XGU_TEXTURE_COUNT; i++) {
       //FIXME: p = xgu_set_texgen(p, XGU_TEXGEN_OFF);
@@ -47,13 +50,18 @@ static void generate_reset() {
   }
 
   for(int i = 0; i < XGU_WEIGHT_COUNT; i++) {
+#if 1
       p = xgu_set_model_view_matrix(p, i, m_identity); //FIXME: Not sure when used?
+#endif
+#if 1
       p = xgu_set_inverse_model_view_matrix(p, i, m_identity); //FIXME: Not sure when used?
+#endif
   }
 
   pb_end(p);
 
-
+#endif
+#if 1
   int width = 640;
   int height = 480;
 
@@ -73,6 +81,21 @@ static void generate_reset() {
   p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
   p = xgu_set_viewport_scale(p, 1.0f / width, 1.0f / height, 1.0f / (float)0xFFFF, 1.0f); //FIXME: Ignored?!
   pb_end(p);
+#endif
+
+
+#if 1
+  p = pb_begin();
+  p = xgu_set_cull_face_enable(p, false);
+  p = xgu_set_depth_test_enable(p, false);
+  p = xgu_set_dither_enable(p, false);
+  p = xgu_set_lighting_enable(p, false);
+  p = xgu_set_stencil_test_enable(p, false);
+  p = xgu_set_alpha_test_enable(p, false);
+  p = xgu_set_blend_enable(p, false);
+  pb_end(p);
+#endif
+
 }
 
 static void generate_clears() {
@@ -120,6 +143,7 @@ static void generate_triangles() {
   p = xgu_end(p);
 #endif
 
+#if 1
   /* Enable texture */
   //FIXME: !!!
   float w = 64.0f;
@@ -137,6 +161,7 @@ static void generate_triangles() {
   p = xgux_set_color3f(p, 1.0f, 1.0f, 1.0f); p = xgu_vertex3f(p,  1.0f, -1.0f,  1.0f);
 
   p = xgu_end(p);
+#endif
   pb_end(p);
 }
 
@@ -144,9 +169,13 @@ int main(int argc, char* argv[]) {
   f = fopen(argv[1], "wb");
   assert(f != NULL);
 
+#if 1
   generate_reset();
+#endif
+#if 1
   generate_clears();
 
+#if 1
   /* Setup texture */
   {
     unsigned int texture_index = 0;
@@ -186,6 +215,7 @@ int main(int argc, char* argv[]) {
 
     pb_end(p);
   }
+#endif
 
   /* Setup fragment program */
   {
@@ -194,8 +224,10 @@ int main(int argc, char* argv[]) {
     pb_end(p);
   }
 
+#if 1
   generate_triangles();
-
+#endif
+#endif
   /* Force pushbuffer to run in XQEMU */
   {
     uint32_t* p = pb_begin();
