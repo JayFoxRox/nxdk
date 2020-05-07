@@ -190,9 +190,10 @@ int main(int argc, char* argv[]) {
     bool b_signed = false;
     bool a_signed = false;
     uint16_t lod_bias = 0;
-    uint8_t filter_min = 1;
-    uint8_t filter_mag = 1;
-    uint8_t context_dma = 0;
+    XguTexConvolution convolution = XGU_TEXTURE_CONVOLUTION_QUINCUNX;
+    uint8_t filter_min = 1; //FIXME: This is very unintuitive
+    uint8_t filter_mag = 1; //FIXME: This is very unintuitive
+    uint8_t context_dma = 0x2; //FIXME: This is very unintuitive
     bool cubemap_enable = 0;
     XguBorderSrc border_src = XGU_SOURCE_TEXTURE;
     uint8_t dimensionality = 2;
@@ -205,12 +206,13 @@ int main(int argc, char* argv[]) {
     unsigned int height = 64;
     unsigned int pitch = 64 * 4;
 
+
     p = xgu_set_texture_offset(p, texture_index, tex_addr & 0x7FFFFFFF);
     p = xgu_set_texture_format(p, texture_index, context_dma, cubemap_enable, border_src, dimensionality, format, mipmap_levels, u_size, v_size, p_size);
     //p = xgu_set_texture_address(p, texture_index, );
     p = xgu_set_texture_control0(p, texture_index, enable, min_lod, max_lod);
     p = xgu_set_texture_control1(p, texture_index, pitch);
-    p = xgu_set_texture_filter(p, texture_index, lod_bias, filter_min, filter_mag, r_signed, b_signed, g_signed, a_signed);
+    p = xgu_set_texture_filter(p, texture_index, lod_bias, convolution, filter_min, filter_mag, r_signed, b_signed, g_signed, a_signed);
     p = xgu_set_texture_image_rect(p, texture_index, width, height);    
 
     pb_end(p);
