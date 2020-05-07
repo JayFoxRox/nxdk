@@ -38,15 +38,19 @@ static void generate_reset() {
   /* Set up some default GPU state (should be done in xgux_init maybe? currently partially done in pb_init) */
   p = pb_begin();
 
-  //FIXME: p = xgu_set_skinning(p, XGU_SKINNING_OFF);
+  p = xgu_set_skin_mode(p, XGU_SKIN_MODE_OFF);
   //FIXME: p = xgu_set_normalization(p, false);
 #if 1
   p = xgu_set_lighting_enable(p, false);
 #endif
 
   for(int i = 0; i < XGU_TEXTURE_COUNT; i++) {
-      //FIXME: p = xgu_set_texgen(p, XGU_TEXGEN_OFF);
-      //p = xgu_set_texture_matrix_enable(p, i, false);
+      p = xgu_set_texgen_s(p, i, XGU_TEXGEN_DISABLE);
+      p = xgu_set_texgen_t(p, i, XGU_TEXGEN_DISABLE);
+      p = xgu_set_texgen_r(p, i, XGU_TEXGEN_DISABLE);
+      p = xgu_set_texgen_q(p, i, XGU_TEXGEN_DISABLE);
+      p = xgu_set_texture_matrix_enable(p, i, false);
+      p = xgu_set_texture_matrix_enable(p, i, m_identity);
   }
 
   for(int i = 0; i < XGU_WEIGHT_COUNT; i++) {
@@ -65,21 +69,14 @@ static void generate_reset() {
   int width = 640;
   int height = 480;
 
-  float m_viewport[4*4] = {
-      width/2.0f, 0.0f,         0.0f,          width/2.0f,
-      0.0f,       height/-2.0f, 0.0f,          height/2.0f,
-      0.0f,       0.0f,         (float)0xFFFF, 0.0f,
-      0.0f,       0.0f,         0.0f,          1.0f
-  };
-
   /* Set up all states for hardware vertex pipeline */
   p = pb_begin();
   p = xgu_set_transform_execution_mode(p, XGU_FIXED, XGU_RANGE_MODE_USER);
   //FIXME: p = xgu_set_fog_enable(p, false);
   p = xgu_set_projection_matrix(p, m_identity); //FIXME: Unused in XQEMU
-  p = xgu_set_composite_matrix(p, m_viewport); //FIXME: Always used in XQEMU?
+  p = xgu_set_composite_matrix(p, m_identity); //FIXME: Always used in XQEMU?
   p = xgu_set_viewport_offset(p, 0.0f, 0.0f, 0.0f, 0.0f);
-  p = xgu_set_viewport_scale(p, 1.0f / width, 1.0f / height, 1.0f / (float)0xFFFF, 1.0f); //FIXME: Ignored?!
+  p = xgu_set_viewport_scale(p, 1.0f, 1.0f, 1.0f, 0.0f); //FIXME: Ignored?!
   pb_end(p);
 #endif
 
@@ -144,6 +141,14 @@ static void generate_triangles() {
 #endif
 
 #if 1
+  p = xgu_begin(p, XGU_TRIANGLES);
+  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p,  0.0f, -100.0f,  0.5f, 1.0f);
+  p = xgux_set_color3f(p, 0.0f, 0.0f, 0.0f); p = xgu_vertex4f(p, -100.0f, 100.0f,  0.5f, 1.0f);
+  p = xgux_set_color3f(p, 0.1f, 0.1f, 0.6f); p = xgu_vertex4f(p, 100.0f, 100.0f,  0.5f, 1.0f);
+  p = xgu_end(p);
+#endif
+
+#if 0
   /* Enable texture */
   //FIXME: !!!
   float w = 64.0f;
