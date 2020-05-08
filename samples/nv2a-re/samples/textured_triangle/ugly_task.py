@@ -19,7 +19,7 @@ class Task():
     compile_fp("tmp/fp.inl", "fp.fp")
 
     # Generate pushbuffer generator
-    compile_c("tmp/pb", "pb.c")
+    compile_c("tmp/pb", "gl/simple.c", "emit.c", "-I./gl")
 
     self._tex_addrs = [None] * 4
     for i in range(4):

@@ -7,13 +7,6 @@
 
 #include "pbkit/pbkit.h"
 
-static FILE* f = NULL;
-
-void _pb_emit(void* data, size_t size) {
-  fwrite(data, size, 1, f);
-}
-
-
 // User code
 
 #define inline // WTF?! linker complains without this [for XGU/XGUX]
@@ -174,8 +167,6 @@ static void generate_triangles() {
 }
 
 int main(int argc, char* argv[]) {
-  f = fopen(argv[1], "wb");
-  assert(f != NULL);
 
 #if 1
   generate_reset();
@@ -253,10 +244,6 @@ int main(int argc, char* argv[]) {
   p = xgu_vertex3f(p, 1.0f,  -1.0f, 1.0f);
   p = xgu_end(p);
 */
-
-
-
-  fclose(f);
 
   return 0;
 }
