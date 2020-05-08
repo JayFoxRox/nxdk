@@ -43,7 +43,7 @@ static void generate_reset() {
       p = xgu_set_texgen_r(p, i, XGU_TEXGEN_DISABLE);
       p = xgu_set_texgen_q(p, i, XGU_TEXGEN_DISABLE);
       p = xgu_set_texture_matrix_enable(p, i, false);
-      p = xgu_set_texture_matrix_enable(p, i, m_identity);
+      p = xgu_set_texture_matrix(p, i, m_identity);
   }
 
   for(int i = 0; i < XGU_WEIGHT_COUNT; i++) {
