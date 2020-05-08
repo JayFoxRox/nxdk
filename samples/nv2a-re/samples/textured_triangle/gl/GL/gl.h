@@ -328,9 +328,10 @@ static void update_matrices() {
   // Undo the viewport transform
   //FIXME: Use actual viewport settings
   float undoViewport[4*4];
-  ortho(tmp, 0.0f, 640.0f, 0.0f, 480.0f, 0.0f, 0xFFFFFF);
+  ortho(tmp, 0.0f, 640.0f, 0.0f, -480.0f, 0.0, 1.0);
   invert(undoViewport, tmp);
 
+printf("v:\n");printMatrix(undoViewport);printf("\n");
 printf("p:\n");printMatrix(projectionMatrix);printf("\n");
 printf("mv:\n");printMatrix(modelViewMatrix);printf("\n");
 
@@ -340,7 +341,7 @@ printf("mv:\n");printMatrix(modelViewMatrix);printf("\n");
 
 
   memcpy(tmp, compositeMatrix, sizeof(tmp));
-//  matmul4(compositeMatrix, tmp, undoViewport);
+  matmul4(compositeMatrix, tmp, undoViewport);
 
 printf("c:\n");printMatrix(compositeMatrix);printf("\n");
 transposeMatrix(compositeMatrix, compositeMatrix);
