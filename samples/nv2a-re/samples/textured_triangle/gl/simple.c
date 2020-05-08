@@ -30,9 +30,9 @@ reshape(int w, int h)
   glViewport(0, 0, w, h);       /* Establish viewing area to cover entire window. */
   glMatrixMode(GL_PROJECTION);  /* Start modifying the projection matrix. */
   glLoadIdentity();             /* Reset project matrix. */
-  //glOrtho(0, w, 0, h, -1, 1);   /* Map abstract coords directly to window coords. */
-  //glScalef(1, -1, 1);           /* Invert Y axis so increasing Y goes down. */
-  //glTranslatef(0, -h, 0);       /* Shift origin up to upper-left corner. */
+  glOrtho(0, w, 0, h, -1, 1);   /* Map abstract coords directly to window coords. */
+  glScalef(1, -1, 1);           /* Invert Y axis so increasing Y goes down. */
+  glTranslatef(0, -h, 0);       /* Shift origin up to upper-left corner. */
 }
 
 void
