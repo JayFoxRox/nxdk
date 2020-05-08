@@ -5,6 +5,7 @@
 #include "pbkit/outer.h"
 
 #include <stdint.h>
+#include <string.h>
 
 typedef uint32_t DWORD;
 
@@ -39,6 +40,36 @@ static uint32_t *pb_push1(uint32_t *p, DWORD command, DWORD param1)
 
 // Hook for the user
 void _pb_emit(void* data, size_t size);
+
+
+
+
+
+// Compatibility warnings
+// #FIXME: Warn for each of these
+
+//FIXME: These functions are just stubs
+#define pb_busy() 0
+#define pb_finished() 0
+#define pb_init() 0
+#define pb_kill()
+#define pb_wait_for_vbl(...)
+#define pb_reset()
+
+//FIXME: These functions will likely be removed from pbkit
+#define pb_back_buffer_width() 640
+#define pb_back_buffer_height() 480
+#define pb_show_front_screen()
+#define pb_target_back_buffer()
+#define pb_show_debug_screen()
+
+//FIXME: These functions will likely be removed from pbkit, but need replacements
+#define pb_erase_depth_stencil_buffer(...) //FIXME: Do manually
+#define pb_fill(...) //FIXME: Do manually
+
+
+
+
 
 
 #endif
