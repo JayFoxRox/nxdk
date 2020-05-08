@@ -41,9 +41,10 @@ def run(program_path, *args):
     raise Exception()
   return Args([])
 
-def compile_c(out_path, in_path):
+def compile_c(out_path, *in_args):
   # Run compiler
-  process = subprocess.Popen(["clang", globals.BASE_PATH + "/" + in_path,"./env/pbkit/pbkit.c","-I./env","-I./../../lib/","-g","-O0","-o", globals.BASE_PATH + "/" + out_path])
+  print(in_args)
+  process = subprocess.Popen(["clang", *in_args, "../../env/pbkit/pbkit.c","-I../../env","-I./../../../../lib/","-g","-O0","-o", out_path], cwd=globals.BASE_PATH)
   stdoutdata, stderrdata = process.communicate()
   if process.returncode:
     print("C compiler failed!")
