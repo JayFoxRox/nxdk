@@ -2228,7 +2228,9 @@ void pb_push_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam)
         assert(false);
     }
 #endif
-
+    assert(subchannel < 0x20);
+    assert((command & ~0x40001FFC) == 0);
+    assert(nparam < 0x800);
     *(p+0)=EncodeMethod(subchannel,command,nparam);
 }
 
