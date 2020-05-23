@@ -850,7 +850,14 @@ static DWORD pb_fifo_handler(void)
         pb_show_debug_screen();
         debugPrint("Software Put=%08x\n",pb_Put);
         debugPrint("Hardware Put=%08x\n",VIDEOREG(NV_PFIFO_CACHE1_DMA_PUT));
-        debugPrint("Hardware Get=%08x\n",VIDEOREG(NV_PFIFO_CACHE1_DMA_GET));
+        uint32_t hw_get = VIDEOREG(NV_PFIFO_CACHE1_DMA_GET);
+        debugPrint("Hardware Get=%08x\n",hw_get);
+        uint32_t dma_state = VIDEOREG(NV_PFIFO_CACHE1_DMA_STATE);
+        debugPrint("DMA state=%08x\n", dma_state);
+        uint32_t* data = (uint32_t*)(0x80000000 | hw_get);
+        for(int i = -3; i <= 3; i++) {
+          debugPrint("- %08x: 0x%08x\n", (uint32_t)&data[i], data[i]);
+        }
         debugPrint("Dma push buffer engine encountered invalid data at these addresses.\n");
 
         VIDEOREG(NV_PFIFO_INTR_0)=NV_PFIFO_INTR_0_DMA_PUSHER_RESET;
