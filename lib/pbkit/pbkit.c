@@ -201,7 +201,6 @@ static  DWORD           pb_DmaChID11Inst;
 
 static  DWORD           *pb_DmaUserAddr;
 
-static  DWORD           pb_PushIndex;
 static  DWORD           *pb_PushStart;
 static  DWORD           *pb_PushNext;
 
@@ -2111,7 +2110,6 @@ uint32_t *pb_begin(void)
 
     if (pb_BeginEndPair==1) debugPrint("pb_begin without a pb_end earlier\n");
     pb_BeginEndPair=1;
-    pb_PushIndex=0;
     pb_PushNext=pb_Put;
     pb_PushStart=pb_Put;
 #endif
@@ -2220,13 +2218,7 @@ void pb_push_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam)
         debugPrint("pb_push_to: missing pb_begin earlier\n");
         assert(false);
     }
-    pb_PushIndex += 1 + nparam;
     pb_PushNext += 1 + nparam;
-    if (pb_PushIndex>128)
-    {
-        debugPrint("pb_push_to: begin-end block musn't exceed 128 dwords\n");
-        assert(false);
-    }
 #endif
     assert(subchannel < 0x20);
     assert((command & ~0x40001FFC) == 0);
