@@ -173,9 +173,6 @@ static const struct {
   "\0\0\0\0\0\0\0\0\0\0\0",
 };
 
-//Screen dimension constants
-const extern int SCREEN_WIDTH;
-const extern int SCREEN_HEIGHT;
 #define NUM_SPRITES 10
 #define MAX_SPEED   5
 
@@ -284,7 +281,7 @@ void demo(void)
     window = SDL_CreateWindow("Demo",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
+        640, 480,
         SDL_WINDOW_SHOWN);
     if(window == NULL)
     {

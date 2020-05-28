@@ -5,9 +5,6 @@
 #include <windows.h>
 #include <stdbool.h>
 
-const extern int SCREEN_WIDTH;
-const extern int SCREEN_HEIGHT;
-
 int main(void) {
   int initialized_SDL   = -1;
   int initialized_TTF   = -1;
@@ -37,7 +34,7 @@ int main(void) {
   window = SDL_CreateWindow("nxdk SDL_ttf sample",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
-                            SCREEN_WIDTH, SCREEN_HEIGHT,
+                            640, 480,
                             SDL_WINDOW_SHOWN);
   if (window == NULL) {
     debugPrint("Window creation failed: %s", SDL_GetError());
