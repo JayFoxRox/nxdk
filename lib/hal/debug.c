@@ -15,10 +15,10 @@
 #define MARGIN         25
 #define MARGINS        50 // MARGIN*2
 
-unsigned char *SCREEN_FB = NULL;
-int SCREEN_WIDTH	= 0;
-int SCREEN_HEIGHT	= 0;
-int SCREEN_BPP = 0;
+static unsigned char *SCREEN_FB = NULL;
+static int SCREEN_WIDTH	= 0;
+static int SCREEN_HEIGHT	= 0;
+static int SCREEN_BPP = 0;
 
 int nextRow = MARGIN;
 int nextCol = MARGIN; 
