@@ -15,6 +15,15 @@
 #define MARGIN         25
 #define MARGINS        50 // MARGIN*2
 
+#define WHITE_32BPP  0x00FFFFFF
+#define BLACK_32BPP  0x00000000
+
+#define WHITE_16BPP  0xFFFF
+#define BLACK_16BPP  0x0000
+
+#define WHITE_15BPP  0x7FFF
+#define BLACK_15BPP  0x0000
+
 static unsigned char *SCREEN_FB = NULL;
 static int SCREEN_WIDTH	= 0;
 static int SCREEN_HEIGHT	= 0;
@@ -168,8 +177,8 @@ void debugPrint(const char *format, ...)
 	int bgColour;
 	switch (SCREEN_BPP) {
 	case 32:
-		fgColour = WHITE;
-		bgColour = BLACK;
+		fgColour = WHITE_32BPP;
+		bgColour = BLACK_32BPP;
 		break;
 	case 16:
 		fgColour = WHITE_16BPP;
