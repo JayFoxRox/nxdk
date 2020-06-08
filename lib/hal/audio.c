@@ -1,3 +1,9 @@
+#include <stdio.h>
+unsigned int add_log(const char* text);
+void set_log_end(unsigned int index);
+void set_log_duration(unsigned int index, unsigned int samples);
+void add_buffer(const void* data, size_t size);
+
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
@@ -49,10 +55,14 @@ static void __stdcall DPC(PKDPC Dpc,
 
 	AC97_DEVICE *pac97device;
 
+	unsigned int i = add_log("DPC");
+
 	pac97device = &ac97Device;
 	if (pac97device)
 			if (pac97device->callback)
 				(pac97device->callback)((void *)pac97device, pac97device->callbackData);
+
+	set_log_end(i);
 
 	return;
 		}
@@ -67,6 +77,10 @@ static BOOLEAN __stdcall ISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
 
 	unsigned char analogInterrupt = pb[0x116];
 	unsigned char digitalInterrupt = pb[0x176];
+
+	char buf[512];
+	sprintf(buf, "ISR: 0x%02X/0x%02X; %d/%d", pb[0x116], pb[0x176], analogBufferCount, digitalBufferCount);
+	add_log(buf);
 
 	bool waitingForAnalog = (analogBufferCount > digitalBufferCount);
 	bool waitingForDigital = (digitalBufferCount > analogBufferCount);
@@ -167,6 +181,10 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 		pac97device->pcmOutDescriptor[i].bufferControl = 0;
 	}
 
+	char buf[512];
+	sprintf(buf, "init reset A: 0x%08X", *(volatile unsigned int*)&pac97device->mmio[0x12C>>2]);
+	add_log(buf);
+
 	// perform cold reset
 	pac97device->mmio[0x12C>>2] &= ~2;
 	LARGE_INTEGER Interval;
@@ -188,9 +206,16 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 	while(pb[0x17B] & (1 << 1))
 		;
 
+	sprintf(buf, "init reset D: 0x%08X", *(volatile unsigned int*)&pac97device->mmio[0x12C>>2]);
+	add_log(buf);
+
 	// clear all interrupts
+	sprintf(buf, "init ISR A: 0x%02X/0x%02X", pb[0x116], pb[0x176]);
+	add_log(buf);
 	pb[0x116] = 0xFF;
 	pb[0x176] = 0xFF;
+	sprintf(buf, "init ISR B: 0x%02X/0x%02X", pb[0x116], pb[0x176]);
+	add_log(buf);
 
 	// tell the audio chip where it should look for the descriptors
 	unsigned int pcmAddress = (unsigned int)&pac97device->pcmOutDescriptor[0];
@@ -221,7 +246,10 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 				LevelSensitive,
 				FALSE);
 	
-	KeConnectInterrupt(&InterruptObject);
+	BOOL status = KeConnectInterrupt(&InterruptObject);
+
+	sprintf(buf, "init interrupt: %d", status);
+	add_log(buf);
 }
 
 // tell the chip it is OK to play...
@@ -270,6 +298,18 @@ void XAudioProvideSamples(unsigned char *buffer, unsigned short bufferLength, in
 	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptor].bufferControl         = bufferControl;
 	pb[0x175] = pac97device->nextDescriptor; // set last active descriptor
 	digitalBufferCount++;
+
+	//FIXME: access through uncached memory
+	size_t frames = bufferLength / (pac97device->sampleSizeInBits / 8);
+	char buf[512];
+	sprintf(buf, "Buffer %X", address);
+	unsigned int i = add_log(buf);
+	set_log_duration(i, frames / 2);
+#if 0
+	void* p = MmMapIoSpace(MmGetPhysicalAddress((PVOID)address), frames * 2, PAGE_READWRITE | PAGE_NOCACHE);
+	add_buffer(p, frames * 2);
+	MmUnmapIoSpace(p, frames * 2);
+#endif
 
 	// increment to the next buffer descriptor (rolling around to 0 once you get to 31)
 	pac97device->nextDescriptor = (pac97device->nextDescriptor + 1) % 32;
