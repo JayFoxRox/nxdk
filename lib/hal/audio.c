@@ -1,4 +1,12 @@
+#include <stdio.h>
+unsigned int add_log(const char* text);
+void set_log_end(unsigned int index);
+void set_log_duration(unsigned int index, unsigned int samples);
+void add_buffer(const void* data, size_t size);
+
+#include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 #include <hal/audio.h>
 #include <xboxkrnl/xboxkrnl.h>
 
@@ -24,6 +32,11 @@
 
 #define AUDIO_IRQ 6
 
+static volatile unsigned int analogBufferCount;
+static volatile unsigned int digitalBufferCount;
+static bool analogDrained;
+static bool digitalDrained;
+
 static KINTERRUPT InterruptObject;
 static KDPC DPCObject;
 
@@ -40,12 +53,16 @@ static void __stdcall DPC(PKDPC Dpc,
 	//CAUTION : if you use fpu in DPC you have to save & restore yourself fpu state!!!
 	//(fpu=floating point unit, i.e the coprocessor executing floating point opcodes)
 
-	volatile AC97_DEVICE *pac97device;
+	AC97_DEVICE *pac97device;
+
+	unsigned int i = add_log("DPC");
 
 	pac97device = &ac97Device;
 	if (pac97device)
 			if (pac97device->callback)
 				(pac97device->callback)((void *)pac97device, pac97device->callbackData);
+
+	set_log_end(i);
 
 	return;
 		}
@@ -55,25 +72,62 @@ static void __stdcall DPC(PKDPC Dpc,
 // PCM actions, since S/PDIF is always spooling through the same buffer.
 static BOOLEAN __stdcall ISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
-	// Was the interrupt triggered because we were out of data?
-	if ((*((char *)0xFEC00116))&8)
-		KeInsertQueueDpc(&DPCObject,NULL,NULL); //calls user callback soon
+	AC97_DEVICE *pac97device = &ac97Device;
+	volatile unsigned char *pb = (unsigned char *)pac97device->mmio;
 
-	//KeInsertQueueDpc queues Dpc and returns TRUE if Dpc not already queued.
-	//Dpc will be queued only once. So only one Dpc is fired after ISRs cease fire.
-	//DPCs avoid crashes inside non reentrant user callbacks called by nested ISRs.
-	//CAUTION : if you use fpu in DPC you have to save & restore yourself fpu state!!!
-	//(fpu=floating point unit, i.e the coprocessor executing floating point opcodes)
+	unsigned char analogInterrupt = pb[0x116];
+	unsigned char digitalInterrupt = pb[0x176];
 
-	// Was the interrupt triggered because of FIFO error?
-	if ((*((char *)0xFEC00116))&0x10)
-		{
-			// Fifo underrun - what should I do here?
-		// In case of heavy processing, insert a DPC
+	char buf[512];
+	sprintf(buf, "ISR: 0x%02X/0x%02X; %d/%d", pb[0x116], pb[0x176], analogBufferCount, digitalBufferCount);
+	add_log(buf);
+
+	bool waitingForAnalog = (analogBufferCount > digitalBufferCount);
+	bool waitingForDigital = (digitalBufferCount > analogBufferCount);
+
+	bool waitCompleted = false;
+
+	if (analogInterrupt) {
+
+		// Was the interrupt triggered because we were out of data?
+		if ((analogInterrupt & 8) && !analogDrained) {
+			if (analogBufferCount > 0) {
+				waitCompleted |= waitingForAnalog;
+				analogBufferCount--;
+			}
 		}
 
-	*((char *)0xFEC00116)=0xFF; // clear all int sources
-	*((char *)0xFEC00176)=0xFF; // clear all int sources
+		analogDrained = analogInterrupt & 4;
+
+		pb[0x116]=0xFF; // clear all int sources
+	}
+
+	if (digitalInterrupt) {
+
+		// Was the interrupt triggered because we were out of data?
+		if ((digitalInterrupt & 8) && !digitalDrained) {
+			if (digitalBufferCount > 0) {
+				waitCompleted |= waitingForDigital;
+				digitalBufferCount--;
+			}
+		}
+
+		digitalDrained = digitalInterrupt & 4;
+
+		pb[0x176]=0xFF; // clear all int sources
+	}
+
+
+	// If a buffer was consumed by analog and digital output, we ask for a DPC
+	if (waitCompleted) {
+			KeInsertQueueDpc(&DPCObject,NULL,NULL); //calls user callback soon
+
+		//KeInsertQueueDpc queues Dpc and returns TRUE if Dpc not already queued.
+		//Dpc will be queued only once. So only one Dpc is fired after ISRs cease fire.
+		//DPCs avoid crashes inside non reentrant user callbacks called by nested ISRs.
+		//CAUTION : if you use fpu in DPC you have to save & restore yourself fpu state!!!
+		//(fpu=floating point unit, i.e the coprocessor executing floating point opcodes)
+	}
 
 	return TRUE;
 }
@@ -99,7 +153,7 @@ void XDumpAudioStatus()
 // are 16 bits, 2 channels (stereo)
 void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, void *data)
 {
-	volatile AC97_DEVICE * pac97device = &ac97Device;
+	AC97_DEVICE * pac97device = &ac97Device;
 	KIRQL irql;
 	ULONG vector;
 
@@ -109,26 +163,59 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 	MmLockUnlockBufferPages((PVOID)pac97device, sizeof(AC97_DEVICE), FALSE);
 
 	pac97device->mmio = (unsigned int *)0xfec00000;
-	pac97device->nextDescriptorMod31 = 0;
+	pac97device->nextDescriptor = 0;
 	pac97device->callback = callback;
 	pac97device->callbackData = data;
 	pac97device->sampleSizeInBits = sampleSizeInBits;
 	pac97device->numChannels = numChannels;
 
-	// initialise descriptors to all 0x00 (no samples)        
-	memset((void *)&pac97device->pcmSpdifDescriptor[0], 0, sizeof(pac97device->pcmSpdifDescriptor));
-	memset((void *)&pac97device->pcmOutDescriptor[0], 0, sizeof(pac97device->pcmOutDescriptor));
+	volatile unsigned char *pb = (unsigned char *)pac97device->mmio;
 
-	// perform a cold reset
+	// initialise descriptors to all zero (no samples)
+	for(unsigned int i = 0; i < 32; i++) {
+		pac97device->pcmSpdifDescriptor[i].bufferStartAddress = 0;
+		pac97device->pcmSpdifDescriptor[i].bufferLengthInSamples = 0;
+		pac97device->pcmSpdifDescriptor[i].bufferControl = 0;
+		pac97device->pcmOutDescriptor[i].bufferStartAddress = 0;
+		pac97device->pcmOutDescriptor[i].bufferLengthInSamples = 0;
+		pac97device->pcmOutDescriptor[i].bufferControl = 0;
+	}
+
+	char buf[512];
+	sprintf(buf, "init reset A: 0x%08X", *(volatile unsigned int*)&pac97device->mmio[0x12C>>2]);
+	add_log(buf);
+
+	// perform cold reset
+	pac97device->mmio[0x12C>>2] &= ~2;
+	LARGE_INTEGER Interval;
+	Interval.QuadPart = -10;
+	KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 	pac97device->mmio[0x12C>>2] |= 2;
 	
 	// wait until the chip is finished resetting...
 	while(!(pac97device->mmio[0x130>>2]&0x100))
 		;
 
+	// reset bus master registers for analog output
+	pb[0x11B] = (1 << 4) | (1 << 3) | (1 << 2) | (1 << 1);
+	while(pb[0x11B] & (1 << 1))
+		;
+
+	// reset bus master registers for digital output
+	pb[0x17B] = (1 << 4) | (1 << 3) | (1 << 2) | (1 << 1);
+	while(pb[0x17B] & (1 << 1))
+		;
+
+	sprintf(buf, "init reset D: 0x%08X", *(volatile unsigned int*)&pac97device->mmio[0x12C>>2]);
+	add_log(buf);
+
 	// clear all interrupts
-	((unsigned char *)pac97device->mmio)[0x116] = 0xFF;
-	((unsigned char *)pac97device->mmio)[0x176] = 0xFF;
+	sprintf(buf, "init ISR A: 0x%02X/0x%02X", pb[0x116], pb[0x176]);
+	add_log(buf);
+	pb[0x116] = 0xFF;
+	pb[0x176] = 0xFF;
+	sprintf(buf, "init ISR B: 0x%02X/0x%02X", pb[0x116], pb[0x176]);
+	add_log(buf);
 
 	// tell the audio chip where it should look for the descriptors
 	unsigned int pcmAddress = (unsigned int)&pac97device->pcmOutDescriptor[0];
@@ -139,6 +226,12 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 
 	// default to being silent...
 	XAudioPause(pac97device);
+
+	// reset buffer status
+	analogBufferCount = 0;
+	digitalBufferCount = 0;
+	analogDrained = false;
+	digitalDrained = false;
 	
 	// Register our ISR
 	vector = HalGetInterruptVector(AUDIO_IRQ, &irql);
@@ -153,13 +246,16 @@ void XAudioInit(int sampleSizeInBits, int numChannels, XAudioCallback callback, 
 				LevelSensitive,
 				FALSE);
 	
-	KeConnectInterrupt(&InterruptObject);
+	BOOL status = KeConnectInterrupt(&InterruptObject);
+
+	sprintf(buf, "init interrupt: %d", status);
+	add_log(buf);
 }
 
 // tell the chip it is OK to play...
 void XAudioPlay()
 {
-	volatile AC97_DEVICE *pac97device = &ac97Device;
+	AC97_DEVICE *pac97device = &ac97Device;
 	volatile unsigned char *pb = (unsigned char *)pac97device->mmio;
 	pb[0x11B] = 0x1d; // PCM out - run, allow interrupts
 	pb[0x17B] = 0x1d; // PCM out - run, allow interrupts
@@ -168,7 +264,7 @@ void XAudioPlay()
 // tell the chip it is paused.
 void XAudioPause()
 {
-	volatile AC97_DEVICE *pac97device = &ac97Device;
+	AC97_DEVICE *pac97device = &ac97Device;
 	volatile unsigned char *pb = (unsigned char *)pac97device->mmio;
 	pb[0x11B] = 0x1c; // PCM out - PAUSE, allow interrupts
 	pb[0x17B] = 0x1c; // PCM out - PAUSE, allow interrupts
@@ -181,25 +277,40 @@ void XAudioPause()
 // chip doesn't run out of data
 void XAudioProvideSamples(unsigned char *buffer, unsigned short bufferLength, int isFinal)
 {
-	volatile AC97_DEVICE *pac97device = &ac97Device;
+	AC97_DEVICE *pac97device = &ac97Device;
 	volatile unsigned char *pb = (unsigned char *)pac97device->mmio;
 
 	unsigned short bufferControl = 0x8000;
 	if (isFinal) 
 		bufferControl |= 0x4000;
 
-	unsigned int address = (unsigned int)buffer;
+	unsigned int address = MmGetPhysicalAddress((PVOID)buffer);
+	unsigned int wordCount = bufferLength / 2;
 
-	pac97device->pcmOutDescriptor[pac97device->nextDescriptorMod31].bufferStartAddress    = MmGetPhysicalAddress((PVOID)address);
-	pac97device->pcmOutDescriptor[pac97device->nextDescriptorMod31].bufferLengthInSamples = bufferLength / (pac97device->sampleSizeInBits / 8);
-	pac97device->pcmOutDescriptor[pac97device->nextDescriptorMod31].bufferControl         = bufferControl;
-	pb[0x115] = (unsigned char)pac97device->nextDescriptorMod31; // set last active descriptor
+	pac97device->pcmOutDescriptor[pac97device->nextDescriptor].bufferStartAddress    = address;
+	pac97device->pcmOutDescriptor[pac97device->nextDescriptor].bufferLengthInSamples = wordCount;
+	pac97device->pcmOutDescriptor[pac97device->nextDescriptor].bufferControl         = bufferControl;
+	pb[0x115] = pac97device->nextDescriptor; // set last active descriptor
+	analogBufferCount++;
 
-	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptorMod31].bufferStartAddress    = MmGetPhysicalAddress((PVOID)address);
-	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptorMod31].bufferLengthInSamples = bufferLength / (pac97device->sampleSizeInBits / 8);
-	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptorMod31].bufferControl         = bufferControl;
-	pb[0x175] = (unsigned char)pac97device->nextDescriptorMod31; // set last active descriptor
+	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptor].bufferStartAddress    = address;
+	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptor].bufferLengthInSamples = wordCount;
+	pac97device->pcmSpdifDescriptor[pac97device->nextDescriptor].bufferControl         = bufferControl;
+	pb[0x175] = pac97device->nextDescriptor; // set last active descriptor
+	digitalBufferCount++;
+
+	//FIXME: access through uncached memory
+	size_t frames = bufferLength / (pac97device->sampleSizeInBits / 8);
+	char buf[512];
+	sprintf(buf, "Buffer %X", address);
+	unsigned int i = add_log(buf);
+	set_log_duration(i, frames / 2);
+#if 0
+	void* p = MmMapIoSpace(MmGetPhysicalAddress((PVOID)address), frames * 2, PAGE_READWRITE | PAGE_NOCACHE);
+	add_buffer(p, frames * 2);
+	MmUnmapIoSpace(p, frames * 2);
+#endif
 
 	// increment to the next buffer descriptor (rolling around to 0 once you get to 31)
-	pac97device->nextDescriptorMod31 = (pac97device->nextDescriptorMod31 +1 ) & 0x1f;
+	pac97device->nextDescriptor = (pac97device->nextDescriptor + 1) % 32;
 }
