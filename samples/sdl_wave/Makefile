@@ -4,3 +4,9 @@ SRCS = $(CURDIR)/main.c
 NXDK_DIR = $(CURDIR)/../..
 NXDK_SDL = y
 include $(NXDK_DIR)/Makefile
+CFLAGS += -O2
+CXXFLAGS += -O2
+LDFLAGS += -O2
+NXDK_CFLAGS += -O2
+NXDK_CXXFLAGS += -O2
+NXDK_LDFLAGS += -O2
