@@ -1,0 +1,6 @@
+XBE_TITLE = glut-simple
+GEN_XISO = $(XBE_TITLE).iso
+SRCS = $(CURDIR)/simple.c
+CFLAGS = -I$(CURDIR)
+NXDK_DIR = $(CURDIR)/../..
+include $(NXDK_DIR)/Makefile
