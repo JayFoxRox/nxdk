@@ -84,6 +84,12 @@ void InstList::Invoke()
         case TSP_PASS_THROUGH:
             op = "PASS_THROUGH";
             break;
+        case TSP_DEPENDENT_AR:
+            op = "DEPENDENT_AR";
+            break;
+        case TSP_DEPENDENT_GB:
+            op = "DEPENDENT_GB";
+            break;
         default:
             assert(false);
             break;
