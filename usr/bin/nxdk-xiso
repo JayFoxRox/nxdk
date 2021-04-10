@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+EXTRACT_XISO=${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
+
+${EXTRACT_XISO} \
+  "$@"
