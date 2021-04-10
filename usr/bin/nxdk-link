@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+if [ "$OS" = "macos" ]; then
+  LLD_LINK="/usr/local/opt/llvm/bin/lld -flavor link"
+elif [ "$OS" = "linux" ]; then
+  LLD_LINK="lld -flavor link"
+else
+  LLD_LINK="lld-link"
+fi
+
+${LLD_LINK} ${NXDK_LDFLAGS} \
+  ${NXDK_DIR}/lib/libwinapi.lib \
+  ${NXDK_DIR}/lib/xboxkrnl/libxboxkrnl.lib \
+  ${NXDK_DIR}/lib/libxboxrt.lib \
+  ${NXDK_DIR}/lib/libpdclib.lib \
+  ${NXDK_DIR}/lib/libnxdk_hal.lib \
+  ${NXDK_DIR}/lib/libnxdk.lib \
+  ${NXDK_DIR}/lib/libnxdk_usb.lib \
+  -LIBPATH:${NXDK_DIR}/lib \
+  -LIBPATH:${NXDK_DIR}/usr/lib \
+  -LIBPATH:${NXDK_DIR}/usr/local/lib \
+  "$@"

@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+if [ "$OS" = "macos" ]; then
+  CLANG="/usr/local/opt/llvm/bin/clang"
+else
+  CLANG="clang"
+fi
+
+${CLANG} \
+  ${NXDK_CXXFLAGS} \
+  -fuse-ld=nxdk-link \
+  "$@"
