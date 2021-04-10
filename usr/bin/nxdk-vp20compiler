@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+VP20COMPILER=${NXDK_DIR}/tools/vp20compiler/vp20compiler
+
+${VP20COMPILER} \
+  "$@"

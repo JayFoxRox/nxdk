@@ -18,22 +18,7 @@ LIB          = nxdk-lib
 AS           = nxdk-as
 CC           = nxdk-cc
 CXX          = nxdk-c++
-ifeq ($(UNAME_S),Linux)
-ifneq ($(UNAME_M),x86_64)
-CGC          = $(NXDK_DIR)/tools/cg/linux/cgc.i386
-else
-CGC          = $(NXDK_DIR)/tools/cg/linux/cgc
-endif #UNAME_M != x86_64
-endif
-ifeq ($(UNAME_S),Darwin)
-CGC          = $(NXDK_DIR)/tools/cg/mac/cgc
-endif
-ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
-$(error Please use a MinGW64 shell)
-endif
-ifneq (,$(findstring MINGW,$(UNAME_S)))
-CGC          = $(NXDK_DIR)/tools/cg/win/cgc
-endif
+CGC          = nxdk-cgc
 
 TARGET       = $(OUTPUT_DIR)/default.xbe
 CXBE         = $(NXDK_DIR)/tools/cxbe/cxbe

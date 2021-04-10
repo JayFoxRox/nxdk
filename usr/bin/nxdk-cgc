@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+if [ "$OS" = "macos" ]; then
+  CGC="${NXDK_DIR}/tools/cg/mac/cgc"
+elif [ "$OS" = "linux" ]; then
+  if [ "$UNAME_M" = "x86_64" ]; then
+    CGC="${NXDK_DIR}/tools/cg/linux/cgc"
+  elif [ "$UNAME_M" = "i686" ]; then
+    CGC="${NXDK_DIR}/tools/cg/linux/cgc.i386"
+  else
+    error "unsupported CPU architecture (${UNAME_M})"
+    exit 1
+  fi
+elif [ "$OS" = "mingw" ]; then
+  CGC="${NXDK_DIR}/tools/cg/win/cgc"
+else
+  error "unsupported operating system (${OS})"
+  exit 1
+fi
+
+${CGC} \
+  "$@"
