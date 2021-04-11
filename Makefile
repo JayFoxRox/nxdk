@@ -56,7 +56,7 @@ NXDK_CFLAGS  = -target i386-pc-win32 -march=pentium3 \
                -I$(NXDK_DIR)/lib -I$(NXDK_DIR)/lib/xboxrt/libc_extensions \
                -I$(NXDK_DIR)/lib/hal \
                -isystem $(NXDK_DIR)/lib/pdclib/include \
-               -I$(NXDK_DIR)/lib/pdclib/platform/xbox/include \
+               -isystem $(NXDK_DIR)/lib/pdclib/platform/xbox/include \
                -I$(NXDK_DIR)/lib/winapi \
                -I$(NXDK_DIR)/lib/xboxrt/vcruntime \
                -DNXDK -D__STDC__=1
