@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+export PKG_CONFIG_LIBDIR=""
+export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}:${NXDK_DIR}/usr/lib/pkgconfig"
+export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}:${NXDK_DIR}/usr/local/lib/pkgconfig"
+
+PKG_CONFIG="pkg-config"
+
+${PKG_CONFIG} \
+  --define-variable=NXDK_DIR=${NXDK_DIR} \
+  "$@"

@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+#FIXME: add explicit support for SDL / SDL2?
+#       https://wiki.libsdl.org/FAQLinux#how_do_i_add_sdl_to_my_project
+
+# Wrapper around autoconf ./configure scripts
+./configure \
+  CC=nxdk-cc \
+  CXX=nxdk-c++ \
+  AR=nxdk-ar \
+  RANLIB=nxdk-ranlib \
+  PKG_CONFIG=nxdk-pkg-config \
+  --host=i686-windows --prefix=${NXDK_DIR}/usr/local "$@"
