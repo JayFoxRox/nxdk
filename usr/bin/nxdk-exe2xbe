@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+CXBE=${NXDK_DIR}/tools/cxbe/cxbe
+
+${CXBE} \
+  "$@" > /dev/null
