@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+LLVM_LIB=llvm-lib
+LLVM_RANLIB=llvm-ranlib
+
+aPath=$(dirname $1)
+aFilename=$(basename $1)
+
+${LLVM_RANLIB} \
+  $aPath/$aFilename
+
+# Remove "lib" prefix and replace extension .a by .lib
+libPath=$aPath
+libFilename=$aFilename
+libFilename=${libFilename#lib}
+libFilename=${libFilename%.a}.lib
+
+# Create a .lib version of the .a file
+${LLVM_LIB} \
+  -out:$libPath/$libFilename \
+  $aPath/$aFilename

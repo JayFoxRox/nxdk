@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+LLVM_AR=llvm-ar
+
+${LLVM_AR} \
+  "$@"

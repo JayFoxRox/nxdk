@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+FP20COMPILER=${NXDK_DIR}/tools/fp20compiler/fp20compiler
+
+${FP20COMPILER} \
+  "$@"

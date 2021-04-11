@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+if [ "$OS" = "macos" ]; then
+  LLVM_LIB="/usr/local/opt/llvm/bin/llvm-lib"
+else
+  LLVM_LIB="llvm-lib"
+fi
+
+# Workaround for LLVM 6 on Ubuntu, where they didn't symlink llvm-lib:
+# See https://github.com/XboxDev/nxdk/issues/196
+if [ ! "$(command -v ${LLVM_LIB})" ]; then
+  warning "Unable to find llvm-lib, using workaround"
+  LLVM_LIB="/usr/lib/llvm-6.0/bin/llvm-lib"
+  if [ ! "$(command -v ${LLVM_LIB})" ]; then
+    error "Workaround did not work; llvm-lib not found"
+    exit 1
+  fi
+fi
+
+${LLVM_LIB} \
+  "$@"
