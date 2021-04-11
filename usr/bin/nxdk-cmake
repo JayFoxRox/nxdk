@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+. ${NXDK_DIR}/usr/share/nxdk/prelude.inl
+
+CMAKE="cmake"
+
+${CMAKE} \
+  -DCMAKE_TOOLCHAIN_FILE=${NXDK_DIR}/usr/share/nxdk/toolchain-nxdk.cmake \
+  "$@"
