@@ -93,6 +93,7 @@ endif
 ifneq ($(NXDK_SDL),)
 include $(NXDK_DIR)/lib/sdl/SDL2/Makefile.xbox
 include $(NXDK_DIR)/lib/sdl/Makefile
+include $(NXDK_DIR)/lib/sdl/Makefile-SDL_mixer
 endif
 
 V = 0
