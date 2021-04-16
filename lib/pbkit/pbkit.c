@@ -201,7 +201,6 @@ static  DWORD           pb_DmaChID11Inst;
 
 static volatile DWORD  *pb_DmaUserAddr;
 
-static  DWORD           pb_PushIndex;
 static  DWORD           *pb_PushStart;
 static  DWORD           *pb_PushNext;
 
@@ -850,7 +849,14 @@ static DWORD pb_fifo_handler(void)
         pb_show_debug_screen();
         debugPrint("Software Put=%08x\n",pb_Put);
         debugPrint("Hardware Put=%08x\n",VIDEOREG(NV_PFIFO_CACHE1_DMA_PUT));
-        debugPrint("Hardware Get=%08x\n",VIDEOREG(NV_PFIFO_CACHE1_DMA_GET));
+        uint32_t hw_get = VIDEOREG(NV_PFIFO_CACHE1_DMA_GET);
+        debugPrint("Hardware Get=%08x\n",hw_get);
+        uint32_t dma_state = VIDEOREG(NV_PFIFO_CACHE1_DMA_STATE);
+        debugPrint("DMA state=%08x\n", dma_state);
+        uint32_t* data = (uint32_t*)(0x80000000 | hw_get);
+        for(int i = -3; i <= 3; i++) {
+          debugPrint("- %08x: 0x%08x\n", (uint32_t)&data[i], data[i]);
+        }
         debugPrint("Dma push buffer engine encountered invalid data at these addresses.\n");
 
         VIDEOREG(NV_PFIFO_INTR_0)=NV_PFIFO_INTR_0_DMA_PUSHER_RESET;
@@ -2104,7 +2110,6 @@ uint32_t *pb_begin(void)
 
     if (pb_BeginEndPair==1) debugPrint("pb_begin without a pb_end earlier\n");
     pb_BeginEndPair=1;
-    pb_PushIndex=0;
     pb_PushNext=pb_Put;
     pb_PushStart=pb_Put;
 #endif
@@ -2213,15 +2218,11 @@ void pb_push_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam)
         debugPrint("pb_push_to: missing pb_begin earlier\n");
         assert(false);
     }
-    pb_PushIndex += 1 + nparam;
     pb_PushNext += 1 + nparam;
-    if (pb_PushIndex>128)
-    {
-        debugPrint("pb_push_to: begin-end block musn't exceed 128 dwords\n");
-        assert(false);
-    }
 #endif
-
+    assert(subchannel < 0x20);
+    assert((command & ~0x40001FFC) == 0);
+    assert(nparam < 0x800);
     *(p+0)=EncodeMethod(subchannel,command,nparam);
 }
 
