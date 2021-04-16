@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cassert>
 
-void GeneralCombinersStruct::Validate(int numConsts, ConstColorStruct *pcc)
+void GeneralCombinersStruct::Validate(ConstColorsStruct *ccs)
 {
     // GLint maxGCs;
     // glGetIntegerv(GL_MAX_GENERAL_COMBINERS_NV, &maxGCs);
@@ -25,23 +25,31 @@ void GeneralCombinersStruct::Validate(int numConsts, ConstColorStruct *pcc)
         num = 1;
     }
 
-    localConsts = 0;
     int i;
-    for (i = 0; i < num; i++) {
+    for (i = 0; i < num; i++)
         general[i].Validate(i);
-        localConsts += general[i].numConsts;
-    }
-
-    if (localConsts > 0)
-        // if (NULL == glCombinerStageParameterfvNV)
-        //     errors.set("local constant(s) specified, but not supported -- ignored");
-        // else
-        for (i = 0; i < num; i++)
-            general[i].SetUnusedLocalConsts(numConsts, pcc);
-
-
     for (; i < maxGCs; i++)
         general[i].ZeroOut();
+
+    localConst0Count = 0;
+    localConst1Count = 0;
+    for (i = 0; i < num; i++) {
+        localConst0Count += general[i].ccs.Count(REG_CONSTANT_COLOR0);
+        localConst1Count += general[i].ccs.Count(REG_CONSTANT_COLOR1);
+    }
+
+    // if (localConst0Count + localConst1Count > 0)
+    // if (NULL == glCombinerStageParameterfvNV)
+    //     errors.set("local constant(s) specified, but not supported -- ignored");
+    // else
+    for (i = 0; i < num; i++) {
+        if (localConst0Count > 0)
+            general[i].ccs.SetUnusedConst(REG_CONSTANT_COLOR0, ccs);
+        if (localConst1Count > 0)
+            general[i].ccs.SetUnusedConst(REG_CONSTANT_COLOR1, ccs);
+    }
+
+
 }
 
 void GeneralCombinersStruct::Invoke()
@@ -62,11 +70,11 @@ void GeneralCombinersStruct::Invoke()
 
     printf("pb_push1(p, NV097_SET_COMBINER_CONTROL,");
     printf("\n    MASK(NV097_SET_COMBINER_CONTROL_FACTOR0, %s)",
-        localConsts > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR0_EACH_STAGE"
-                : "NV097_SET_COMBINER_CONTROL_FACTOR0_SAME_FACTOR_ALL");
+        localConst0Count > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR0_EACH_STAGE"
+                             : "NV097_SET_COMBINER_CONTROL_FACTOR0_SAME_FACTOR_ALL");
     printf("\n    | MASK(NV097_SET_COMBINER_CONTROL_FACTOR1, %s)",
-        localConsts > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR1_EACH_STAGE"
-                : "NV097_SET_COMBINER_CONTROL_FACTOR1_SAME_FACTOR_ALL");
+        localConst1Count > 0 ? "NV097_SET_COMBINER_CONTROL_FACTOR1_EACH_STAGE"
+                             : "NV097_SET_COMBINER_CONTROL_FACTOR1_SAME_FACTOR_ALL");
     printf("\n    | MASK(NV097_SET_COMBINER_CONTROL_ITERATION_COUNT, %d)", num);
     printf(");\n");
     printf("p += 2;\n");
@@ -75,7 +83,7 @@ void GeneralCombinersStruct::Invoke()
 void GeneralCombinerStruct::ZeroOut()
 {
         numPortions = 2;
-        numConsts = 0;
+        ccs.numConsts = 0;
 
         portion[0].ZeroOut();
         portion[0].designator = RCP_RGB;
@@ -84,30 +92,50 @@ void GeneralCombinerStruct::ZeroOut()
 }
 
 
-void GeneralCombinerStruct::SetUnusedLocalConsts(int numGlobalConsts, ConstColorStruct *globalCCs)
+int ConstColorsStruct::Count(int reg_name)
 {
-        int i;
-    for (i = 0; i < numGlobalConsts; i++) {
-        bool constUsed = false;
+    int count = 0;
+    int i;
+    for (i = 0; i < numConsts; i++)
+        if (cc[i].reg.bits.name == reg_name)
+            count++;
+    return count;
+}
+
+void ConstColorsStruct::SetUnusedConst(int reg_name, ConstColorsStruct *ccs)
+{
+    int i;
+    for (i = 0; i < ccs->numConsts; i++) {
+        if (ccs->cc[i].reg.bits.name == reg_name)
+            if (Count(reg_name) == 0) {
+                assert(numConsts < 2);
+                cc[numConsts++] = ccs->cc[i];
+            }
+    }
+}
+
+void ConstColorsStruct::Validate() {
+    int i;
+    for (i = 0; i < numConsts; i++) {
         int j;
-        for (j = 0; j < numConsts; j++)
-            constUsed |= (cc[j].reg.bits.name == globalCCs[i].reg.bits.name);
-        if (!constUsed) {
-            assert(numConsts < 2);
-            cc[numConsts++] = globalCCs[i];
-        }
+        for (j = 0; j < 4; j++)
+            if(cc[i].v[j] < 0.0f || cc[i].v[j] > 1.0f)
+                errors.set("value out of range", cc[i].line_number);
+    }
+
+    if (2 == numConsts && cc[0].reg.bits.name == cc[1].reg.bits.name) {
+        errors.set("constant set twice", cc[1].line_number);
+
+        // Only use the one that was set last
+        cc[0] = cc[1];
+        numConsts = 1;
     }
 }
 
 
 void GeneralCombinerStruct::Validate(int stage)
 {
-    if (2 == numConsts &&
-        cc[0].reg.bits.name == cc[1].reg.bits.name) {
-        errors.set("local constant set twice", cc[1].line_number);
-        cc[0] = cc[1];
-        numConsts = 1;
-    }
+    ccs.Validate();
 
     switch (numPortions)
     {
@@ -138,10 +166,10 @@ void GeneralCombinerStruct::Invoke(int stage)
     // if (NULL != glCombinerStageParameterfvNV)
     //     for (i = 0; i < numConsts; i++)
     //         glCombinerStageParameterfvNV(GL_COMBINER0_NV + stage, cc[i].reg.bits.name, &(cc[i].v[0]));
-    assert(numConsts <= 2);
-    for (i = 0; i < numConsts; i++) {
+    assert(ccs.numConsts <= 2);
+    for (i = 0; i < ccs.numConsts; i++) {
         const char* cmd = NULL;
-        switch(cc[i].reg.bits.name) {
+        switch(ccs.cc[i].reg.bits.name) {
         case REG_CONSTANT_COLOR0:
             cmd = "NV097_SET_COMBINER_FACTOR0";
             break;
@@ -153,16 +181,11 @@ void GeneralCombinerStruct::Invoke(int stage)
             break;
         }
 
-        assert(cc[i].v[0] >= 0.0f && cc[i].v[0] <= 1.0f);
-        assert(cc[i].v[1] >= 0.0f && cc[i].v[1] <= 1.0f);
-        assert(cc[i].v[2] >= 0.0f && cc[i].v[2] <= 1.0f);
-        assert(cc[i].v[3] >= 0.0f && cc[i].v[3] <= 1.0f);
-
         printf("pb_push1(p, %s + %d * 4,", cmd, stage);
-        printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(cc[i].v[3] * 0xFF));
-        printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(cc[i].v[0] * 0xFF));
-        printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(cc[i].v[1] * 0xFF));
-        printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(cc[i].v[2] * 0xFF));
+        printf("\n    MASK(0xFF000000, 0x%02X)", (unsigned char)(ccs.cc[i].v[3] * 0xFF));
+        printf("\n    | MASK(0x00FF0000, 0x%02X)", (unsigned char)(ccs.cc[i].v[0] * 0xFF));
+        printf("\n    | MASK(0x0000FF00, 0x%02X)", (unsigned char)(ccs.cc[i].v[1] * 0xFF));
+        printf("\n    | MASK(0x000000FF, 0x%02X)", (unsigned char)(ccs.cc[i].v[2] * 0xFF));
         printf(");\n");
         printf("p += 2;\n");
     }
