@@ -16,7 +16,8 @@ endif()
 #FIXME: Include stuff for MinGW / Windows-GNU / Windows-Clang?
 #FIXME: How to set the ABI?
 
-set(NXDK_LINK_XBE "${NXDK_DIR}/usr/bin/${TOOLCHAIN_PREFIX}-exe2xbe -OUT:<TARGET>.xbe <TARGET>.exe")
+#set(NXDK_LINK_XBE "${NXDK_DIR}/usr/bin/${TOOLCHAIN_PREFIX}-exe2xbe -OUT:<TARGET>.xbe <TARGET>.exe")
+set(NXDK_LINK_XBE "")
 
 # cross compiler to use for C
 set(CMAKE_C_COMPILER "${NXDK_DIR}/usr/bin/${TOOLCHAIN_PREFIX}-cc")
