@@ -39,7 +39,8 @@ endfunction()
 
 
 set(CMAKE_SYSROOT "${NXDK_DIR}")
-set(CMAKE_MODULE_PATH "${NXDK_DIR}/usr/share/cmake/Modules/")
+#message("TOOLCHAIN ${CMAKE_MODULE_PATH}")
+#set(CMAKE_MODULE_PATH "${NXDK_DIR}/usr/share/cmake/Modules/")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
